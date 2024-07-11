@@ -17,19 +17,11 @@ public class TransactionService {
 
     public Uni<Transaction> createTransaction(Transaction transaction) {
         LOGGER.info("Service: Persisting transaction: " + transaction);
-        return Uni.createFrom().item(() -> {
-            transactionRepository.persist(transaction);
-            LOGGER.info("Service: Transaction persisted: " + transaction);
-            return transaction;
-        }).onFailure().invoke(ex -> LOGGER.error("Failed to persist transaction", ex));
+        return transactionRepository.persist(transaction);
     }
 
     public Uni<Transaction> getTransaction(String transactionId) {
         LOGGER.info("Service: Retrieving transaction with ID: " + transactionId);
-        return Uni.createFrom().item(() -> {
-            Transaction transaction = transactionRepository.find("transactionId", transactionId).firstResult();
-            LOGGER.info("Service: Transaction retrieved: " + transaction);
-            return transaction;
-        }).onFailure().invoke(ex -> LOGGER.error("Failed to retrieve transaction", ex));
+        return transactionRepository.find("transactionId", transactionId).firstResult();
     }
 }

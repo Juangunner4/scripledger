@@ -12,9 +12,8 @@ import java.util.Date;
 @Getter
 @Setter
 public class Transaction {
-    private ObjectId id;
-    private String transactionId;
-    private String tokenId;
+    private ObjectId transactionId;
+    private Token token;
     private String senderPublicKey;
     private String recipientPublicKey;
     private double amount;
