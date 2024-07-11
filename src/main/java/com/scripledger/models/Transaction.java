@@ -3,6 +3,8 @@ package com.scripledger.models;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import lombok.Getter;
 import lombok.Setter;
+import org.bson.types.ObjectId;
+
 
 import java.util.Date;
 
@@ -10,6 +12,7 @@ import java.util.Date;
 @Getter
 @Setter
 public class Transaction {
+    private ObjectId id;
     private String transactionId;
     private String tokenId;
     private String senderPublicKey;
