@@ -4,7 +4,6 @@ import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import lombok.Getter;
 import lombok.Setter;
-import org.bson.types.ObjectId;
 
 import java.util.Date;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.Map;
 @Getter
 @Setter
 public class UserAccount extends ReactivePanacheMongoEntityBase {
-    private ObjectId accountId;
     private String username;
     private String publicKey;
     private String kycStatus;

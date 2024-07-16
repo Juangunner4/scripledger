@@ -6,12 +6,13 @@ import com.scripledger.repositories.UserAccountRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 import org.p2p.solanaj.core.Account;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @ApplicationScoped
 public class UserAccountService {
@@ -43,7 +44,7 @@ public class UserAccountService {
     }
 
     private Uni<Boolean> checkIfUserExists(String username) {
-      return userAccountRepository.find("username", username).firstResult().map(userAccount -> userAccount != null);
+      return userAccountRepository.find("username", username).firstResult().map(Objects::nonNull);
     }
 
     private Uni<UserAccount> createNewAccount(String username) {
@@ -51,7 +52,6 @@ public class UserAccountService {
         String publicKey = solanaAccount.getPublicKey().toString();
 
         UserAccount userAccount = new UserAccount();
-        userAccount.setAccountId(new ObjectId());
         userAccount.setUsername(username);
         userAccount.setPublicKey(publicKey);
         userAccount.setKycStatus("pending");
@@ -63,6 +63,6 @@ public class UserAccountService {
         balances.add(userBalance);
         userAccount.setBalances(balances);
 
-        return userAccountRepository.persist(userAccount).replaceWith(userAccount);
+        return userAccountRepository.persist(userAccount);
     }
 }

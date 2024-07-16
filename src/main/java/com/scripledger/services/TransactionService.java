@@ -5,6 +5,7 @@ import com.scripledger.repositories.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -21,7 +22,8 @@ public class TransactionService {
     }
 
     public Uni<Transaction> getTransaction(String transactionId) {
+        ObjectId objectId = new ObjectId(transactionId);
         LOGGER.info("Service: Retrieving transaction with ID: " + transactionId);
-        return transactionRepository.find("transactionId", transactionId).firstResult();
+        return transactionRepository.findById(objectId);
     }
 }
