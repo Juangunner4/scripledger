@@ -7,7 +7,6 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 
 @Path("/accounts")
@@ -39,7 +38,7 @@ public class UserAccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> getAccountByPublicKey(@PathParam("accountId") String accountId) {
         LOGGER.info("Fetching account with publicKey: " + accountId);
-        return userAccountService.getAccountByPublicKey(accountId)
+        return userAccountService.getAccountById(accountId)
                 .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())
                 .onFailure().recoverWithItem(throwable -> {
                     LOGGER.error("Failed to fetch account", throwable);
@@ -48,13 +47,12 @@ public class UserAccountResource {
     }
 
     @PUT
-    @Path("/update/{accountId}")
+    @Path("/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> updateAccount(@PathParam("accountId") String accountId, UserAccount userAccount) {
-        LOGGER.info("Updating account with accountId: " + accountId);
-        ObjectId objectId = new ObjectId(accountId);
-        return userAccountService.updateAccount(objectId, userAccount.getPublicKey(), String.valueOf(userAccount.getAlternateAccountId()), userAccount.getCustomerProfile())
+    public Uni<Response> updateAccount(UserAccount userAccount) {
+        LOGGER.info("Updating account with accountId: " + userAccount.getId());
+        return userAccountService.updateAccount(userAccount.getId(), userAccount.getPublicKey(), String.valueOf(userAccount.getAlternateAccountId()), userAccount.getCustomerProfile())
                 .map(updatedAccount -> {
                     if (updatedAccount != null) {
                         return Response.ok(updatedAccount).build();

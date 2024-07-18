@@ -58,7 +58,7 @@ public class UserAccountService {
                 }).onFailure().invoke(ex -> LOGGER.error("Failed to create account", ex));
     }
 
-    public Uni<UserAccount> getAccountByPublicKey(String accountId) {
+    public Uni<UserAccount> getAccountById(String accountId) {
         LOGGER.info("Retrieving account with accountId: " + accountId);
         ObjectId objectId = new ObjectId(accountId);
         return userAccountRepository.findById(objectId);
