@@ -6,6 +6,7 @@ import com.scripledger.repositories.UserAccountRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 import org.p2p.solanaj.core.Account;
 
@@ -25,6 +26,25 @@ public class UserAccountService {
 
     private static final Logger LOGGER = Logger.getLogger(UserAccountService.class);
 
+    public Uni<UserAccount> updateAccount(ObjectId accountId, String accountPublicKey, String alternateAccountId, String customerProfile) {
+        return userAccountRepository.findById(accountId)
+                .flatMap(userAccount -> {
+                    if (userAccount == null) {
+                        return Uni.createFrom().nullItem();
+                    }
+                    userAccount.setId(accountId);
+                    ObjectId objectId = new ObjectId(alternateAccountId);
+                    userAccount.setPublicKey(accountPublicKey);
+                    userAccount.setAlternateAccountId(objectId);
+                    userAccount.setCustomerProfile(customerProfile);
+                    return userAccountRepository.update(userAccount)
+                            .map(updatedAccount -> {
+                                LOGGER.info("Updated account with ID: " + updatedAccount.getPublicKey());
+                                return updatedAccount;
+                            });
+                });
+    }
+
     public Uni<UserAccount> createAccount(String username) {
         LOGGER.info("Creating account for username: " + username);
 
@@ -38,9 +58,10 @@ public class UserAccountService {
                 }).onFailure().invoke(ex -> LOGGER.error("Failed to create account", ex));
     }
 
-    public Uni<UserAccount> getAccountByPublicKey(String publicKey) {
-        LOGGER.info("Retrieving account with publicKey: " + publicKey);
-        return userAccountRepository.findByPublicKey(publicKey);
+    public Uni<UserAccount> getAccountByPublicKey(String accountId) {
+        LOGGER.info("Retrieving account with accountId: " + accountId);
+        ObjectId objectId = new ObjectId(accountId);
+        return userAccountRepository.findById(objectId);
     }
 
     private Uni<Boolean> checkIfUserExists(String username) {

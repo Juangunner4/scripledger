@@ -1,11 +1,13 @@
 package com.scripledger.resources;
 
+import com.scripledger.models.UserAccount;
 import com.scripledger.services.UserAccountService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 
 @Path("/accounts")
@@ -33,15 +35,32 @@ public class UserAccountResource {
     }
 
     @GET
-    @Path("/{publicKey}")
+    @Path("/{accountId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> getAccountByPublicKey(@PathParam("publicKey") String publicKey) {
-        LOGGER.info("Fetching account with publicKey: " + publicKey);
-        return userAccountService.getAccountByPublicKey(publicKey)
+    public Uni<Response> getAccountByPublicKey(@PathParam("accountId") String accountId) {
+        LOGGER.info("Fetching account with publicKey: " + accountId);
+        return userAccountService.getAccountByPublicKey(accountId)
                 .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())
                 .onFailure().recoverWithItem(throwable -> {
                     LOGGER.error("Failed to fetch account", throwable);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(throwable.getMessage()).build();
+                });
+    }
+
+    @PUT
+    @Path("/update/{accountId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> updateAccount(@PathParam("accountId") String accountId, UserAccount userAccount) {
+        LOGGER.info("Updating account with accountId: " + accountId);
+        ObjectId objectId = new ObjectId(accountId);
+        return userAccountService.updateAccount(objectId, userAccount.getPublicKey(), String.valueOf(userAccount.getAlternateAccountId()), userAccount.getCustomerProfile())
+                .map(updatedAccount -> {
+                    if (updatedAccount != null) {
+                        return Response.ok(updatedAccount).build();
+                    } else {
+                        return Response.status(Response.Status.NOT_FOUND).entity("Account not found").build();
+                    }
                 });
     }
 }
