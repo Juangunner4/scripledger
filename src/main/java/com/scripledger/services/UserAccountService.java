@@ -1,11 +1,13 @@
 package com.scripledger.services;
 
+import com.scripledger.models.AdminActionRequest;
 import com.scripledger.models.Balance;
 import com.scripledger.models.UserAccount;
 import com.scripledger.repositories.UserAccountRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 import org.p2p.solanaj.core.Account;
@@ -62,6 +64,32 @@ public class UserAccountService {
         LOGGER.info("Retrieving account with accountId: " + accountId);
         ObjectId objectId = new ObjectId(accountId);
         return userAccountRepository.findById(objectId);
+    }
+
+    public Uni<Response> adminAction(ObjectId accountId, AdminActionRequest request) {
+        return userAccountRepository.findById(accountId)
+                .flatMap(userAccount -> {
+                    if (userAccount == null) {
+                        return Uni.createFrom().item(Response.status(Response.Status.NOT_FOUND).entity("Account not found").build());
+                    }
+
+                    // Perform the admin action based on the action type
+                    if ("freeze".equalsIgnoreCase(request.getActionType())) {
+                        // Implement freeze logic (e.g., marking the account as frozen in the database)
+                        LOGGER.info("Freezing account with ID: " + accountId);
+                        // Example: set a status field or similar
+                    } else if ("revoke".equalsIgnoreCase(request.getActionType())) {
+                        // Implement revoke logic (e.g., transferring tokens back to an admin account)
+                        LOGGER.info("Revoking account with ID: " + accountId);
+                        // Example: use solanaService to transfer tokens
+                    } else {
+                        return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).entity("Invalid action type").build());
+                    }
+
+                    // Update user account and return success response
+                    return userAccountRepository.update(userAccount)
+                            .map(updatedAccount -> Response.ok(updatedAccount).build());
+                });
     }
 
     private Uni<Boolean> checkIfUserExists(String username) {

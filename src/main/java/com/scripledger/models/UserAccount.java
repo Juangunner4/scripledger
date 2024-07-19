@@ -23,6 +23,9 @@ public class UserAccount extends ReactivePanacheMongoEntityBase {
     private Map<String, Map<String, String>> thirdPartyAccountProfile;
     private ObjectId alternateAccountId;
     private String customerProfile;
+    private String actionType;
+    private String category;
+    private String note;
 
     public UserAccount() {
 
