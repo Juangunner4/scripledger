@@ -73,22 +73,34 @@ public class UserAccountService {
                         return Uni.createFrom().item(Response.status(Response.Status.NOT_FOUND).entity("Account not found").build());
                     }
 
+                    Uni<String> resultUni;
+
                     // Perform the admin action based on the action type
                     if ("freeze".equalsIgnoreCase(request.getActionType())) {
-                        // Implement freeze logic (e.g., marking the account as frozen in the database)
                         LOGGER.info("Freezing account with ID: " + accountId);
-                        // Example: set a status field or similar
+                        userAccount.setActionType("freeze");
+                        userAccount.setCategory(request.getCategory());
+                        userAccount.setNote(request.getNote());
+                        resultUni = Uni.createFrom().item("Account frozen successfully");
                     } else if ("revoke".equalsIgnoreCase(request.getActionType())) {
-                        // Implement revoke logic (e.g., transferring tokens back to an admin account)
                         LOGGER.info("Revoking account with ID: " + accountId);
-                        // Example: use solanaService to transfer tokens
+                        userAccount.setActionType("revoke");
+                        userAccount.setCategory(request.getCategory());
+                        userAccount.setNote(request.getNote());
+                        // Example: use solanaService to transfer tokens if needed
+                        resultUni = solanaService.transferToken(
+                                new Account(request.getAccountPublicKey().getBytes()),  // Assuming the request has the private key for the admin account
+                                request.getAccountPublicKey(),
+                                request.getTokenId(),
+                                (long) request.getBalance().getAmount(),
+                                "brandTokenMintAddress"  // Replace with actual token mint address
+                        );
                     } else {
                         return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).entity("Invalid action type").build());
                     }
 
-                    // Update user account and return success response
-                    return userAccountRepository.update(userAccount)
-                            .map(updatedAccount -> Response.ok(updatedAccount).build());
+                    return resultUni.flatMap(result -> userAccountRepository.update(userAccount)
+                            .map(updatedAccount -> Response.ok(updatedAccount).build()));
                 });
     }
 
