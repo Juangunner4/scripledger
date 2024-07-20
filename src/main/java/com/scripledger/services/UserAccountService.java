@@ -48,7 +48,7 @@ public class UserAccountService {
     }
 
     public Uni<UserAccount> createAccount(String username) {
-        LOGGER.info("Creating account for username: " + username);
+        LOGGER.info("Service: Creating account for username: " + username);
 
         return checkIfUserExists(username)
                 .flatMap(exists -> {
