@@ -9,4 +9,5 @@ public class GiftCardRequest {
     private String cardSerial;
     private String brandName;
     private String tokenId;
+    private String cardType;
 }

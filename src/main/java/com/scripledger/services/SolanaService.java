@@ -24,9 +24,22 @@ public class SolanaService {
     }
 
     public Account createAccount() {
-        Account newAccount = new Account();
-        LOGGER.info("Created new account with public key: " + newAccount.getPublicKey().toString());
-        return newAccount;
+        try {
+            Account newAccount = new Account();
+            String publicKey = newAccount.getPublicKey().toBase58();
+            // Securely store the private key (example: save to a secure vault or encrypted storage)
+            String privateKey = newAccount.getSecretKey().toString();
+            // Example of secure storage (implementation depends on your secure storage solution)
+            secureStorePrivateKey(publicKey, privateKey);
+            return newAccount;
+        } catch (Exception e) {
+            return createAccount();
+        }
+    }
+
+
+    private void secureStorePrivateKey(String publicKey, String privateKey) {
+        // Implement secure storage logic here (e.g., save to a secure vault or encrypted database)
     }
 
     public PublicKey getPublicKey(String publicKeyStr) {
