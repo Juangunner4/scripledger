@@ -1,19 +1,28 @@
 package com.scripledger.services;
 
+import com.scripledger.util.FileUtil;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.bitcoinj.core.Base58;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.p2p.solanaj.core.*;
 import org.p2p.solanaj.programs.SystemProgram;
 import org.p2p.solanaj.rpc.RpcClient;
 import org.p2p.solanaj.rpc.RpcException;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
 @ApplicationScoped
 public class SolanaService {
+
+    @Inject
+    @ConfigProperty(name = "solana.privateKeyFile")
+    String privateKeyFilePath;
 
     private static final Logger LOGGER = Logger.getLogger(SolanaService.class);
     private static final String SOLANA_RPC_URL = "https://api.devnet.solana.com";
@@ -28,18 +37,22 @@ public class SolanaService {
             Account newAccount = new Account();
             String publicKey = newAccount.getPublicKey().toBase58();
             // Securely store the private key (example: save to a secure vault or encrypted storage)
-            String privateKey = newAccount.getSecretKey().toString();
-            // Example of secure storage (implementation depends on your secure storage solution)
+            String privateKey = Base58.encode(newAccount.getSecretKey());
+            FileUtil.writeToFile(privateKeyFilePath, privateKey);
             secureStorePrivateKey(publicKey, privateKey);
             return newAccount;
         } catch (Exception e) {
-            return createAccount();
+            LOGGER.error("Failed to create account", e);
+            throw new RuntimeException("Failed to create account", e);
         }
     }
 
-
     private void secureStorePrivateKey(String publicKey, String privateKey) {
         // Implement secure storage logic here (e.g., save to a secure vault or encrypted database)
+    }
+
+    private String retrievePrivateKey() throws IOException {
+        return FileUtil.readFromFile(privateKeyFilePath);
     }
 
     public PublicKey getPublicKey(String publicKeyStr) {
@@ -47,7 +60,7 @@ public class SolanaService {
             return new PublicKey(publicKeyStr);
         } catch (Exception e) {
             LOGGER.error("Failed to create public key", e);
-            return null;
+            throw new RuntimeException("Invalid public key: " + publicKeyStr, e);
         }
     }
 
@@ -59,7 +72,7 @@ public class SolanaService {
                 return signature;
             } catch (RpcException e) {
                 LOGGER.error("Failed to send transaction", e);
-                return null;
+                throw new RuntimeException("Failed to send transaction", e);
             }
         });
     }
@@ -80,7 +93,7 @@ public class SolanaService {
             return sendTransaction(transaction, sender);
         } catch (Exception e) {
             LOGGER.error("Failed to transfer SOL", e);
-            return Uni.createFrom().failure(e);
+            return Uni.createFrom().failure(new RuntimeException("Failed to transfer SOL", e));
         }
     }
 
@@ -114,7 +127,7 @@ public class SolanaService {
             return sendTransaction(transaction, sender);
         } catch (Exception e) {
             LOGGER.error("Failed to transfer tokens", e);
-            return Uni.createFrom().failure(e);
+            return Uni.createFrom().failure(new RuntimeException("Failed to transfer tokens", e));
         }
     }
 
@@ -147,7 +160,7 @@ public class SolanaService {
                 return sendTransaction(transaction, adminAccount).await().indefinitely();
             } catch (Exception e) {
                 LOGGER.error("Failed to create brand tokens", e);
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to create brand tokens", e);
             }
         });
     }
@@ -160,7 +173,7 @@ public class SolanaService {
             return transferToken(adminAccount, adminAccount.getPublicKey().toString(), userPublicKeyStr, amount, brandTokenMintAddress);
         } catch (Exception e) {
             LOGGER.error("Failed to distribute brand tokens", e);
-            return Uni.createFrom().failure(e);
+            return Uni.createFrom().failure(new RuntimeException("Failed to distribute brand tokens", e));
         }
     }
 
