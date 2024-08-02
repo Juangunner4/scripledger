@@ -1,12 +1,14 @@
 package com.scripledger.resources;
 
 import com.scripledger.models.Brand;
+import com.scripledger.models.MintTokensRequest;
 import com.scripledger.models.Token;
 import com.scripledger.services.BrandsService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
 import java.util.List;
@@ -48,5 +50,14 @@ public class BrandsResource {
         return brandsService.getTokenList(brandId)
                 .onItem().invoke(tokenList -> LOGGER.info("Brand tokens fetched: " + tokenList))
                 .onFailure().invoke(Throwable::printStackTrace);
+    }
+
+
+    @POST
+    @Path("/mintTokens")
+    public Uni<Response> mintTokens(MintTokensRequest request) {
+        return brandsService.mintTokens(request)
+                .map(txSignature -> Response.ok(txSignature).build())
+                .onFailure().recoverWithItem(err -> Response.status(Response.Status.BAD_REQUEST).entity(err.getMessage()).build());
     }
 }

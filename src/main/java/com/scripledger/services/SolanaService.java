@@ -131,18 +131,36 @@ public class SolanaService {
         }
     }
 
-    public Uni<String> createBrandToken(String brandTokenMintAddress, String adminPublicKeyStr, long initialSupply) {
+    public Uni<String> createBrandToken(String adminPublicKeyStr, Long initialSupply) {
         return Uni.createFrom().item(() -> {
             try {
+                // Load or generate the admin account securely
                 Account adminAccount = new Account(); // Admin account should be securely managed
                 PublicKey adminPublicKey = new PublicKey(adminPublicKeyStr);
-                PublicKey mintPublicKey = new PublicKey(brandTokenMintAddress);
 
+                // Generate a new mint account
+                Account mintAccount = new Account();
+                PublicKey mintPublicKey = mintAccount.getPublicKey();
+
+                // Initialize the mint account with the initial supply
                 Transaction transaction = new Transaction();
 
+                // Calculate the required lamports for rent exemption
+                long lamportsForRentExemption = getMinimumBalanceForRentExemption();
+
+                // Create account instruction
+                TransactionInstruction createAccountInstruction = SystemProgram.createAccount(
+                        adminPublicKey,
+                        mintPublicKey,
+                        lamportsForRentExemption,
+                        TokenProgram.MINT_LAYOUT_SIZE,
+                        TokenProgram.PROGRAM_ID
+                );
+
+                // Initialize mint instruction
                 byte[] data = ByteBuffer.allocate(9)
                         .order(ByteOrder.LITTLE_ENDIAN)
-                        .put((byte) 7) // Mint instruction index for the Token Program
+                        .put((byte) 0) // InitializeMint instruction index for the Token Program
                         .putLong(initialSupply)
                         .array();
 
@@ -155,14 +173,28 @@ public class SolanaService {
                         data
                 );
 
+                transaction.addInstruction(createAccountInstruction);
                 transaction.addInstruction(mintInstruction);
 
-                return sendTransaction(transaction, adminAccount).await().indefinitely();
+                // Send the transaction
+                return sendTransaction(transaction, adminAccount, mintAccount).await().indefinitely();
             } catch (Exception e) {
                 LOGGER.error("Failed to create brand tokens", e);
                 throw new RuntimeException("Failed to create brand tokens", e);
             }
         });
+    }
+
+    private long getMinimumBalanceForRentExemption() {
+        // Implement this method to return the minimum balance required for rent exemption.
+        // You might need to call a Solana RPC method to get this value.
+        return 2039280; // Example value, replace with actual calculation
+    }
+
+    private Uni<String> sendTransaction(Transaction transaction, Account... signers) {
+        // Implement the logic to send the transaction to the Solana network
+        // and return the transaction signature.
+        return Uni.createFrom().item("transaction-signature"); // Replace with actual implementation
     }
 
     public Uni<String> distributeBrandTokens(Account adminAccount, String brandTokenMintAddress, String userPublicKeyStr, long amount) {
@@ -178,6 +210,7 @@ public class SolanaService {
     }
 
     public static class TokenProgram {
+        public static final int MINT_LAYOUT_SIZE = 82;
         public static final PublicKey PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
     }
 }

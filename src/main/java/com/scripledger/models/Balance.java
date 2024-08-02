@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class Balance {
     private String tokenName;
-    private double amount;
+    private Long amount;
 }
