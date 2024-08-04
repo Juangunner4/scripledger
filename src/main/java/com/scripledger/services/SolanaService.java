@@ -26,7 +26,7 @@ public class SolanaService {
 
     private static final Logger LOGGER = Logger.getLogger(SolanaService.class);
     private static final String SOLANA_RPC_URL = "https://api.devnet.solana.com";
-    private RpcClient client;
+    private final RpcClient client;
 
     public SolanaService() {
         this.client = new RpcClient(SOLANA_RPC_URL);
@@ -36,7 +36,6 @@ public class SolanaService {
         try {
             Account newAccount = new Account();
             String publicKey = newAccount.getPublicKey().toBase58();
-            // Securely store the private key (example: save to a secure vault or encrypted storage)
             String privateKey = Base58.encode(newAccount.getSecretKey());
             FileUtil.writeToFile(privateKeyFilePath, privateKey);
             secureStorePrivateKey(publicKey, privateKey);
@@ -134,21 +133,16 @@ public class SolanaService {
     public Uni<String> createBrandToken(String adminPublicKeyStr, Long initialSupply) {
         return Uni.createFrom().item(() -> {
             try {
-                // Load or generate the admin account securely
                 Account adminAccount = new Account(); // Admin account should be securely managed
                 PublicKey adminPublicKey = new PublicKey(adminPublicKeyStr);
 
-                // Generate a new mint account
                 Account mintAccount = new Account();
                 PublicKey mintPublicKey = mintAccount.getPublicKey();
 
-                // Initialize the mint account with the initial supply
                 Transaction transaction = new Transaction();
 
-                // Calculate the required lamports for rent exemption
                 long lamportsForRentExemption = getMinimumBalanceForRentExemption();
 
-                // Create account instruction
                 TransactionInstruction createAccountInstruction = SystemProgram.createAccount(
                         adminPublicKey,
                         mintPublicKey,
@@ -157,7 +151,6 @@ public class SolanaService {
                         TokenProgram.PROGRAM_ID
                 );
 
-                // Initialize mint instruction
                 byte[] data = ByteBuffer.allocate(9)
                         .order(ByteOrder.LITTLE_ENDIAN)
                         .put((byte) 0) // InitializeMint instruction index for the Token Program
@@ -176,8 +169,7 @@ public class SolanaService {
                 transaction.addInstruction(createAccountInstruction);
                 transaction.addInstruction(mintInstruction);
 
-                // Send the transaction
-                return sendTransaction(transaction, adminAccount, mintAccount).await().indefinitely();
+                return sendTransaction(transaction, adminAccount, mintAccount);
             } catch (Exception e) {
                 LOGGER.error("Failed to create brand tokens", e);
                 throw new RuntimeException("Failed to create brand tokens", e);
@@ -187,14 +179,20 @@ public class SolanaService {
 
     private long getMinimumBalanceForRentExemption() {
         // Implement this method to return the minimum balance required for rent exemption.
-        // You might need to call a Solana RPC method to get this value.
         return 2039280; // Example value, replace with actual calculation
     }
 
-    private Uni<String> sendTransaction(Transaction transaction, Account... signers) {
-        // Implement the logic to send the transaction to the Solana network
-        // and return the transaction signature.
-        return Uni.createFrom().item("transaction-signature"); // Replace with actual implementation
+    private String sendTransaction(Transaction transaction, Account... signers) throws RpcException {
+        return client.getApi().sendTransaction(transaction, Arrays.asList(signers));
+//        return Uni.createFrom().item(() -> {
+//            try {
+//                String signature = client.getApi().sendTransaction(transaction, Arrays.asList(signers));
+//                LOGGER.info("Transaction sent with signature: " + signature);
+//                return signature;
+//            } catch (RpcException e) {
+//                throw new RuntimeException("Failed to send transaction", e);
+//            }
+//        });
     }
 
     public Uni<String> distributeBrandTokens(Account adminAccount, String brandTokenMintAddress, String userPublicKeyStr, long amount) {
