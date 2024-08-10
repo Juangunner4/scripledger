@@ -2,6 +2,17 @@ properties:
   containers:
     - image: scripledgerRegistry.azurecr.io/scripledger:latest
       name: scripledgerapi-app
+      env:
+        - name: MONGODB_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-connection-string-secret
+              key: MONGODB_CONNECTION_STRING
+        - name: SOLANA_PRIVATE_KEY_FILE
+          valueFrom:
+            secretKeyRef:
+              name: solana-private-key-file-secret
+              key: SOLANA_PRIVATE_KEY_FILE
       probes:
         liveness:
           httpGet:
@@ -22,6 +33,8 @@ properties:
       traffic:
         - latestRevision: true
           weight: 100
-    environmentVariables:
-      - name: PORT
-        value: "8080"
+    secrets:
+      - name: mongodb-connection-string-secret
+        value: mongodb+srv://scripledgeruser:6DIAbFItYQ96JmrB@cluster0.shjpril.mongodb.net/scripledger-db?retryWrites=true
+      - name: solana-private-key-file-secret
+        value: /path/to/private/key

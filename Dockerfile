@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM maven:3.8.4-openjdk-17-slim AS build
+FROM maven:3.9.5-eclipse-temurin-17 AS build
 
 # Set the working directory
 WORKDIR /work/
@@ -12,7 +12,7 @@ COPY src /work/src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Create the final image
-FROM quay.io/quarkus/quarkus-distroless-image:1.0
+FROM openjdk:17-jdk-slim
 
 # Copy the built application from the previous stage
 COPY --from=build /work/target/quarkus-app/lib/ /deployments/lib/
@@ -20,6 +20,7 @@ COPY --from=build /work/target/quarkus-app/*.jar /deployments/
 COPY --from=build /work/target/quarkus-app/app/ /deployments/app/
 COPY --from=build /work/target/quarkus-app/quarkus/ /deployments/quarkus/
 
+# Expose port 8080
 EXPOSE 8080
 
 # Specify the entrypoint for the container
