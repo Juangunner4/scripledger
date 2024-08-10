@@ -20,8 +20,5 @@ COPY --from=build /work/target/quarkus-app/*.jar /deployments/
 COPY --from=build /work/target/quarkus-app/app/ /deployments/app/
 COPY --from=build /work/target/quarkus-app/quarkus/ /deployments/quarkus/
 
-# Expose port 80
-EXPOSE 80
-
 # Specify the entrypoint for the container
-ENTRYPOINT ["java", "-Dquarkus.http.port=80", "-Dquarkus.http.host=0.0.0.0", "-jar", "/deployments/quarkus-run.jar"]
+ENTRYPOINT ["java", "-Dquarkus.http.host=0.0.0.0", "-jar", "/deployments/quarkus-run.jar"]
