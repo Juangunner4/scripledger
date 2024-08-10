@@ -1,0 +1,27 @@
+properties:
+  containers:
+    - image: scripledgerRegistry.azurecr.io/scripledger:latest
+      name: scripledgerapi-app
+      probes:
+        liveness:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readiness:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+  configuration:
+    ingress:
+      external: true
+      targetPort: 8080
+      traffic:
+        - latestRevision: true
+          weight: 100
+    environmentVariables:
+      - name: PORT
+        value: "8080"
