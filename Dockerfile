@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM quay.io/quarkus/ubi-quarkus-mandrel:22.3.0.0-Final-java17 AS build
+FROM maven:3.8.4-openjdk-17-slim AS build
 
 # Set the working directory
 WORKDIR /work/
@@ -9,10 +9,10 @@ COPY pom.xml /work/
 COPY src /work/src
 
 # Build the application using Maven
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Stage 2: Create the final image
-FROM quay.io/quarkus/quarkus-distroless-image:2.13.3.Final
+FROM quay.io/quarkus/quarkus-distroless-image:1.0
 
 # Copy the built application from the previous stage
 COPY --from=build /work/target/quarkus-app/lib/ /deployments/lib/
