@@ -17,22 +17,25 @@ properties:
         liveness:
           httpGet:
             path: /health
-            port: 8080
+            port: 80
           initialDelaySeconds: 10
           periodSeconds: 5
         readiness:
           httpGet:
             path: /health
-            port: 8080
+            port: 80
           initialDelaySeconds: 10
           periodSeconds: 5
   configuration:
     ingress:
       external: true
-      targetPort: 8080
+      targetPort: 80
       traffic:
         - latestRevision: true
           weight: 100
+      replicas:
+        minReplicas: 1
+        maxReplicas: 5
     secrets:
       - name: mongodb-connection-string-secret
         value: mongodb+srv://scripledgeruser:6DIAbFItYQ96JmrB@cluster0.shjpril.mongodb.net/scripledger-db?retryWrites=true
