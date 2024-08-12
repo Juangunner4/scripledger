@@ -163,9 +163,9 @@
                 <configuration>
                     <schemaVersion>v2</schemaVersion>
                     <subscriptionId>272c33a3-a391-4c35-b635-21665d8fade4</subscriptionId>
-                    <resourceGroup>scripledger-1722906035677-rg</resourceGroup>
-                    <appName>scripledger-1722906035677</appName>
-                    <pricingTier>F1</pricingTier>
+                    <resourceGroup>scripLedgerRG</resourceGroup>
+                    <appName>scripLedger</appName>
+                    <pricingTier>B3</pricingTier>
                     <region>eastus</region>
                     <runtime>
                         <os>Linux</os>

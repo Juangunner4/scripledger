@@ -37,6 +37,7 @@ public class SolanaService {
             Account newAccount = new Account();
             String publicKey = newAccount.getPublicKey().toBase58();
             String privateKey = Base58.encode(newAccount.getSecretKey());
+            FileUtil.createFileIfNotExists(privateKeyFilePath);
             FileUtil.writeToFile(privateKeyFilePath, privateKey);
             secureStorePrivateKey(publicKey, privateKey);
             return newAccount;
