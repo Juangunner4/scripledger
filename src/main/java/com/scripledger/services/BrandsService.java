@@ -10,6 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
+import org.p2p.solanaj.core.Account;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ public class BrandsService {
         return brandsRepository.findById(objectId).map(Brand::getTokens);
     }
 
-    public Uni<String> mintTokens(MintTokensRequest request) {
+    public Uni<Uni<String>> mintTokens(MintTokensRequest request) {
         ObjectId objectId = new ObjectId(request.getBrandId());
         return brandsRepository.findById(objectId).flatMap(brand -> {
 
@@ -81,19 +82,16 @@ public class BrandsService {
     }
 
     private Uni<Brand> createNewBrand(Brand brand) {
-        return solanaService.createAccount().getPublicKey().toBase58().transform(publicKey -> {
-            brand.setOwnerPublicKey(publicKey);
-            // Here, you should securely store the private key, for demonstration we use Base58.encode(account.getSecretKey())
+        Account newAccount = solanaService.createAccount();
+        String publicKey = newAccount.getPublicKey().toBase58();
+        brand.setOwnerPublicKey(publicKey);
 
-            // Mint initial brand tokens
-            return solanaService.createBrandToken(publicKey, 1000L) // Adjust initial supply as needed
-                    .flatMap(txSignature -> brandsRepository.persist(brand)
-                            .map(persistedBrand -> {
-                                persistedBrand.setOwnerPublicKey(publicKey);
-                                return persistedBrand;
-                            }));
-
-        });
+        return solanaService.createBrandToken(publicKey, 1000L)
+                .flatMap(txSignature -> brandsRepository.persist(brand)
+                        .map(persistedBrand -> {
+                            persistedBrand.setOwnerPublicKey(publicKey);
+                            return persistedBrand;
+                        }));
     }
 
 

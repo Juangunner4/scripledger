@@ -47,6 +47,18 @@ public class SolanaService {
         }
     }
 
+    public void executeCreateBrandToken(String ownerPublicKeyStr, Long initialSupply) {
+        createBrandToken(ownerPublicKeyStr, initialSupply)
+                .subscribe().with(
+                        signature -> {
+                            System.out.println("Transaction completed with signature: " + signature);
+                        },
+                        failure -> {
+                            System.err.println("Transaction failed with error: " + failure.getMessage());
+                        }
+                );
+    }
+
     private void secureStorePrivateKey(String publicKey, String privateKey) {
         // Implement secure storage logic here (e.g., save to a secure vault or encrypted database)
     }
@@ -63,20 +75,6 @@ public class SolanaService {
             throw new RuntimeException("Invalid public key: " + publicKeyStr, e);
         }
     }
-
-    public Uni<String> sendTransaction(Transaction transaction, Account signer) {
-        return Uni.createFrom().item(() -> {
-            try {
-                String signature = client.getApi().sendTransaction(transaction, signer);
-                LOGGER.info("Transaction sent with signature: " + signature);
-                return signature;
-            } catch (RpcException e) {
-                LOGGER.error("Failed to send transaction", e);
-                throw new RuntimeException("Failed to send transaction", e);
-            }
-        });
-    }
-
     public Uni<String> transferSol(Account sender, String recipientPublicKeyStr, long lamports) {
         try {
             PublicKey recipientPublicKey = new PublicKey(recipientPublicKeyStr);
@@ -131,21 +129,26 @@ public class SolanaService {
         }
     }
 
-    public Uni<String> createBrandToken(String adminPublicKeyStr, Long initialSupply) {
+    public Uni<Uni<String>> createBrandToken(String ownerPublicKeyStr, Long initialSupply) {
         return Uni.createFrom().item(() -> {
             try {
-                Account adminAccount = new Account(); // Admin account should be securely managed
-                PublicKey adminPublicKey = new PublicKey(adminPublicKeyStr);
+                PublicKey ownerPublicKey = new PublicKey(ownerPublicKeyStr);
+
+                // Log owner account public key
+                System.out.println("Owner account public key: " + ownerPublicKey);
 
                 Account mintAccount = new Account();
                 PublicKey mintPublicKey = mintAccount.getPublicKey();
+
+                // Log mint account public key
+                System.out.println("Mint account public key: " + mintPublicKey.toString());
 
                 Transaction transaction = new Transaction();
 
                 long lamportsForRentExemption = getMinimumBalanceForRentExemption();
 
                 TransactionInstruction createAccountInstruction = SystemProgram.createAccount(
-                        adminPublicKey,
+                        ownerPublicKey,
                         mintPublicKey,
                         lamportsForRentExemption,
                         TokenProgram.MINT_LAYOUT_SIZE,
@@ -159,22 +162,67 @@ public class SolanaService {
                         .array();
 
                 AccountMeta mintAccountMeta = new AccountMeta(mintPublicKey, false, true);
-                AccountMeta adminAccountMeta = new AccountMeta(adminPublicKey, true, true);
+                AccountMeta ownerAccountMeta = new AccountMeta(ownerPublicKey, true, true);
 
                 TransactionInstruction mintInstruction = new TransactionInstruction(
                         TokenProgram.PROGRAM_ID,
-                        Arrays.asList(mintAccountMeta, adminAccountMeta),
+                        Arrays.asList(mintAccountMeta, ownerAccountMeta),
                         data
                 );
 
                 transaction.addInstruction(createAccountInstruction);
                 transaction.addInstruction(mintInstruction);
 
-                return sendTransaction(transaction, adminAccount, mintAccount);
+                // Log details of the transaction instructions
+                System.out.println("Transaction instructions added:");
+                logTransactionInstruction(createAccountInstruction);
+                logTransactionInstruction(mintInstruction);
+
+                return sendTransaction(transaction, mintAccount)
+                        .onItem().transform(signature -> {
+                            LOGGER.info("Transaction successful with signature: " + signature);
+                            return signature;
+                        })
+                        .onFailure().invoke(e -> {
+                            LOGGER.error("Transaction failed", e);
+                        });
             } catch (Exception e) {
                 LOGGER.error("Failed to create brand tokens", e);
                 throw new RuntimeException("Failed to create brand tokens", e);
             }
+        });
+    }
+
+    public Uni<String> sendTransaction(Transaction transaction, Account signer) {
+        Uni<String> uni = Uni.createFrom().item(() -> {
+            try {
+                String signature = client.getApi().sendTransaction(transaction, signer);
+                LOGGER.info("Transaction sent with signature: " + signature);
+                return signature;
+            } catch (RpcException e) {
+                LOGGER.error("Failed to send transaction", e);
+                throw new RuntimeException("Failed to send transaction", e);
+            }
+        });
+
+        // Force subscription and handle errors
+        uni.subscribe().with(
+                signature -> LOGGER.info("Transaction successful with signature: " + signature),
+                failure -> {
+                    LOGGER.error("Transaction failed", failure);
+                    throw new RuntimeException("Transaction failed", failure);
+                }
+        );
+
+        return uni;
+    }
+
+    private void logTransactionInstruction(TransactionInstruction instruction) {
+        System.out.println("Instruction program id: " + instruction.getProgramId().toString());
+        instruction.getKeys().forEach(key -> {
+            System.out.println("AccountMeta public key: " + key.getPublicKey().toString());
+            System.out.println("Is signer: " + key.isSigner());
+            System.out.println("Is writable: " + key.isWritable());
         });
     }
 
@@ -183,18 +231,6 @@ public class SolanaService {
         return 2039280; // Example value, replace with actual calculation
     }
 
-    private String sendTransaction(Transaction transaction, Account... signers) throws RpcException {
-        return client.getApi().sendTransaction(transaction, Arrays.asList(signers));
-//        return Uni.createFrom().item(() -> {
-//            try {
-//                String signature = client.getApi().sendTransaction(transaction, Arrays.asList(signers));
-//                LOGGER.info("Transaction sent with signature: " + signature);
-//                return signature;
-//            } catch (RpcException e) {
-//                throw new RuntimeException("Failed to send transaction", e);
-//            }
-//        });
-    }
 
     public Uni<String> distributeBrandTokens(Account adminAccount, String brandTokenMintAddress, String userPublicKeyStr, long amount) {
         try {
