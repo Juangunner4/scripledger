@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.List;
 
 @ApplicationScoped
 public class SolanaService {
@@ -48,7 +49,7 @@ public class SolanaService {
     }
 
     public void executeCreateBrandToken(String ownerPublicKeyStr, Long initialSupply) {
-        createBrandToken(ownerPublicKeyStr, initialSupply)
+        createBrandTokenAccount(ownerPublicKeyStr, initialSupply)
                 .subscribe().with(
                         signature -> {
                             System.out.println("Transaction completed with signature: " + signature);
@@ -88,7 +89,7 @@ public class SolanaService {
                     )
             );
 
-            return sendTransaction(transaction, sender);
+            return sendTransaction(transaction, (List<Account>) sender);
         } catch (Exception e) {
             LOGGER.error("Failed to transfer SOL", e);
             return Uni.createFrom().failure(new RuntimeException("Failed to transfer SOL", e));
@@ -122,27 +123,28 @@ public class SolanaService {
 
             transaction.addInstruction(transferInstruction);
 
-            return sendTransaction(transaction, sender);
+            return sendTransaction(transaction, (List<Account>) sender);
         } catch (Exception e) {
             LOGGER.error("Failed to transfer tokens", e);
             return Uni.createFrom().failure(new RuntimeException("Failed to transfer tokens", e));
         }
     }
 
-    public Uni<Uni<String>> createBrandToken(String ownerPublicKeyStr, Long initialSupply) {
+    public Uni<Uni<String>> createBrandTokenAccount(String ownerPublicKeyStr, Long initialSupply) {
         return Uni.createFrom().item(() -> {
             try {
+
+                Account owner = new Account(Base58.decode(retrievePrivateKey())); // Load fee payer account
                 PublicKey ownerPublicKey = new PublicKey(ownerPublicKeyStr);
 
                 // Log owner account public key
-                System.out.println("Owner account public key: " + ownerPublicKey);
+                LOGGER.info("Owner account public key: " + ownerPublicKey);
 
                 Account mintAccount = new Account();
                 PublicKey mintPublicKey = mintAccount.getPublicKey();
 
                 // Log mint account public key
-                System.out.println("Mint account public key: " + mintPublicKey.toString());
-
+                LOGGER.info("Mint account public key: " + mintPublicKey.toString());
                 Transaction transaction = new Transaction();
 
                 long lamportsForRentExemption = getMinimumBalanceForRentExemption();
@@ -155,37 +157,15 @@ public class SolanaService {
                         TokenProgram.PROGRAM_ID
                 );
 
-                byte[] data = ByteBuffer.allocate(9)
-                        .order(ByteOrder.LITTLE_ENDIAN)
-                        .put((byte) 0) // InitializeMint instruction index for the Token Program
-                        .putLong(initialSupply)
-                        .array();
-
-                AccountMeta mintAccountMeta = new AccountMeta(mintPublicKey, false, true);
-                AccountMeta ownerAccountMeta = new AccountMeta(ownerPublicKey, true, true);
-
-                TransactionInstruction mintInstruction = new TransactionInstruction(
-                        TokenProgram.PROGRAM_ID,
-                        Arrays.asList(mintAccountMeta, ownerAccountMeta),
-                        data
-                );
-
                 transaction.addInstruction(createAccountInstruction);
-                transaction.addInstruction(mintInstruction);
 
                 // Log details of the transaction instructions
-                System.out.println("Transaction instructions added:");
+                LOGGER.info("Transaction instructions added:");
                 logTransactionInstruction(createAccountInstruction);
-                logTransactionInstruction(mintInstruction);
 
-                return sendTransaction(transaction, mintAccount)
-                        .onItem().transform(signature -> {
-                            LOGGER.info("Transaction successful with signature: " + signature);
-                            return signature;
-                        })
-                        .onFailure().invoke(e -> {
-                            LOGGER.error("Transaction failed", e);
-                        });
+                List<Account> signers = Arrays.asList(owner, mintAccount);
+
+                return sendTransaction(transaction, signers);
             } catch (Exception e) {
                 LOGGER.error("Failed to create brand tokens", e);
                 throw new RuntimeException("Failed to create brand tokens", e);
@@ -193,10 +173,56 @@ public class SolanaService {
         });
     }
 
-    public Uni<String> sendTransaction(Transaction transaction, Account signer) {
+
+    public Uni<Uni<String>> mintTokens(String mintPublicKeyStr, String recipientTokenAccountPublicKeyStr, Long amount) {
+        return Uni.createFrom().item(() -> {
+            try {
+                Account owner = new Account(Base58.decode(retrievePrivateKey())); // Load fee payer account
+                PublicKey mintPublicKey = new PublicKey(mintPublicKeyStr);
+                PublicKey recipientTokenAccountPublicKey = new PublicKey(recipientTokenAccountPublicKeyStr);
+
+                // Log mint and recipient public keys
+                LOGGER.info("Mint account public key: " + mintPublicKey);
+                LOGGER.info("Recipient token account public key: " + recipientTokenAccountPublicKey);
+
+                Transaction transaction = new Transaction();
+
+                byte[] data = ByteBuffer.allocate(9)
+                        .order(ByteOrder.LITTLE_ENDIAN)
+                        .put((byte) 7) // MintTo instruction index
+                        .putLong(amount)
+                        .array();
+
+                AccountMeta mintAccountMeta = new AccountMeta(mintPublicKey, false, true);
+                AccountMeta recipientAccountMeta = new AccountMeta(recipientTokenAccountPublicKey, false, true);
+                AccountMeta ownerAccountMeta = new AccountMeta(owner.getPublicKey(), true, false);
+
+                TransactionInstruction mintToInstruction = new TransactionInstruction(
+                        TokenProgram.PROGRAM_ID,
+                        Arrays.asList(mintAccountMeta, recipientAccountMeta, ownerAccountMeta),
+                        data
+                );
+
+                transaction.addInstruction(mintToInstruction);
+
+                // Log details of the transaction instructions
+                LOGGER.info("Transaction instructions added:");
+                logTransactionInstruction(mintToInstruction);
+
+                List<Account> signers = List.of(owner);
+
+                return sendTransaction(transaction, signers);
+            } catch (Exception e) {
+                LOGGER.error("Failed to mint tokens", e);
+                throw new RuntimeException("Failed to mint tokens", e);
+            }
+        });
+    }
+
+    public Uni<String> sendTransaction(Transaction transaction, List<Account> signers) {
         Uni<String> uni = Uni.createFrom().item(() -> {
             try {
-                String signature = client.getApi().sendTransaction(transaction, signer);
+                String signature = client.getApi().sendTransaction(transaction, signers);
                 LOGGER.info("Transaction sent with signature: " + signature);
                 return signature;
             } catch (RpcException e) {
@@ -218,11 +244,11 @@ public class SolanaService {
     }
 
     private void logTransactionInstruction(TransactionInstruction instruction) {
-        System.out.println("Instruction program id: " + instruction.getProgramId().toString());
+        LOGGER.info("Instruction program id: " + instruction.getProgramId().toString());
         instruction.getKeys().forEach(key -> {
-            System.out.println("AccountMeta public key: " + key.getPublicKey().toString());
-            System.out.println("Is signer: " + key.isSigner());
-            System.out.println("Is writable: " + key.isWritable());
+            LOGGER.info("AccountMeta public key: " + key.getPublicKey().toString());
+            LOGGER.info("Is signer: " + key.isSigner());
+            LOGGER.info("Is writable: " + key.isWritable());
         });
     }
 
@@ -230,7 +256,6 @@ public class SolanaService {
         // Implement this method to return the minimum balance required for rent exemption.
         return 2039280; // Example value, replace with actual calculation
     }
-
 
     public Uni<String> distributeBrandTokens(Account adminAccount, String brandTokenMintAddress, String userPublicKeyStr, long amount) {
         try {
@@ -246,6 +271,6 @@ public class SolanaService {
 
     public static class TokenProgram {
         public static final int MINT_LAYOUT_SIZE = 82;
-        public static final PublicKey PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+        public static final PublicKey PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
     }
 }

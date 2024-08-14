@@ -10,7 +10,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
-import org.p2p.solanaj.core.Account;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +56,7 @@ public class BrandsService {
             if (brand == null) {
                 return Uni.createFrom().failure(new RuntimeException("Brand not found"));
             }
-            return solanaService.createBrandToken(request.getOwnerPublicKeyStr(), request.getAmount())
+            return solanaService.mintTokens(request.getTokenAccountPublicKeyStr(), request.getOwnerPublicKeyStr(), request.getAmount())
                     .flatMap(txSignature -> {
                         List<Token> tokenList = new ArrayList<>();
                         Token token = new Token();
@@ -82,11 +81,9 @@ public class BrandsService {
     }
 
     private Uni<Brand> createNewBrand(Brand brand) {
-        Account newAccount = solanaService.createAccount();
-        String publicKey = newAccount.getPublicKey().toBase58();
-        brand.setOwnerPublicKey(publicKey);
+        String publicKey = brand.getOwnerPublicKey();
 
-        return solanaService.createBrandToken(publicKey, 1000L)
+        return solanaService.createBrandTokenAccount(publicKey, 100000000L)
                 .flatMap(txSignature -> brandsRepository.persist(brand)
                         .map(persistedBrand -> {
                             persistedBrand.setOwnerPublicKey(publicKey);
