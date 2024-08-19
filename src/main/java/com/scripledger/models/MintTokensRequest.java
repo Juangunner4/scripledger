@@ -6,7 +6,6 @@ import lombok.Setter;
 @Setter
 public class MintTokensRequest {
     private String brandId;
-    private String ownerPublicKeyStr;
     private String tokenAccountPublicKeyStr;
     private Long amount;
     private String tokenName;

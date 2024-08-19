@@ -87,6 +87,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- JS -->
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.4</version>
+        </dependency>
+
         <!-- Blockchain dependencies -->
         <dependency>
             <groupId>com.github.p2p-org</groupId>
@@ -165,7 +172,7 @@
                     <subscriptionId>272c33a3-a391-4c35-b635-21665d8fade4</subscriptionId>
                     <resourceGroup>scripLedgerRG</resourceGroup>
                     <appName>scripLedger</appName>
-                    <pricingTier>B3</pricingTier>
+                    <pricingTier>F1</pricingTier>
                     <region>eastus</region>
                     <runtime>
                         <os>Linux</os>

@@ -56,11 +56,10 @@ public class BrandsService {
             if (brand == null) {
                 return Uni.createFrom().failure(new RuntimeException("Brand not found"));
             }
-            return solanaService.mintTokens(request.getTokenAccountPublicKeyStr(), request.getOwnerPublicKeyStr(), request.getAmount())
+            return solanaService.initializeMintTokens(request.getTokenAccountPublicKeyStr(), request.getAmount())
                     .flatMap(txSignature -> {
                         List<Token> tokenList = new ArrayList<>();
                         Token token = new Token();
-                        token.setPublicKey(brand.getBrandTokenMintAddress());
 
                         Balance balance = new Balance();
                         balance.setTokenName(request.getTokenName());
@@ -83,12 +82,11 @@ public class BrandsService {
     private Uni<Brand> createNewBrand(Brand brand) {
         String publicKey = brand.getOwnerPublicKey();
 
-        return solanaService.createBrandTokenAccount(publicKey, 100000000L)
-                .flatMap(txSignature -> brandsRepository.persist(brand)
-                        .map(persistedBrand -> {
-                            persistedBrand.setOwnerPublicKey(publicKey);
-                            return persistedBrand;
-                        }));
+        return solanaService.createBrandTokenAccount(publicKey)
+                .flatMap(tokenPublicKey -> {
+                    brand.setTokenPublicKey(tokenPublicKey);
+                    return brandsRepository.update(brand);
+                });
     }
 
 
