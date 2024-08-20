@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class SolanaService {
@@ -184,24 +185,29 @@ public class SolanaService {
     }
 
 
-    public Uni<Uni<String>> initializeMintTokens(String tokenAccountPublicKeyStr, Long amount) {
+    public Uni<String> mintTokens(String recipientTokenPublicKeyStr, Long amount) {
         return Uni.createFrom().item(() -> {
             try {
                 Account owner = new Account(Base58.decode(retrievePrivateKey(privateOwnerKeyFile)));// Load fee payer account
                 PublicKey ownerPublicKey = owner.getPublicKey();
 
-                Account tokenAccount = new Account(Base58.decode(retrievePrivateKey(privateTokenKeyFile)));
-                PublicKey tokenPublicKey = tokenAccount.getPublicKey();
-                LOGGER.info("Token account public key: " + tokenPublicKey);
+                Account mintAccount = new Account();
+                PublicKey mintPublicKey = mintAccount.getPublicKey();
+                LOGGER.info("Mint account public key: " + mintAccount.getPublicKey());
 
+                PublicKey recipientTokenPublicKey = new PublicKey(recipientTokenPublicKeyStr);
+                LOGGER.info("Recipient account public key: " + recipientTokenPublicKeyStr);
+
+                var result = client.getApi().getAccountInfo(ownerPublicKey);
+                LOGGER.info("Account Info: " + result.getValue());
 
                 Transaction transaction = new Transaction();
 
-                TransactionInstruction initializeMintInstruction = TokenProgramUtil.initializeMint(
-                        tokenPublicKey,     // The public key of the mint account you created
-                        9,                  // Number of decimals (e.g., 9)
-                        ownerPublicKey,     // The public key of the mint authority
-                        null);                // Freeze authority (can be null if not needed)
+                TransactionInstruction initializeMintInstruction = TokenProgramUtil.mintTo(
+                        mintPublicKey,
+                        recipientTokenPublicKey,
+                        ownerPublicKey,
+                        amount);
 
                 transaction.addInstruction(initializeMintInstruction);
 
@@ -209,9 +215,9 @@ public class SolanaService {
                 LOGGER.info("Transaction instructions added:");
                 logTransactionInstruction(initializeMintInstruction);
 
-                List<Account> signers = List.of(owner, tokenAccount);
+                List<Account> signers = List.of(owner);
 
-                return sendTransaction(transaction, signers);
+                return sendTransaction(transaction, signers).toString();
             } catch (Exception e) {
                 LOGGER.error("Failed to mint tokens", e);
                 throw new RuntimeException("Failed to mint tokens", e);

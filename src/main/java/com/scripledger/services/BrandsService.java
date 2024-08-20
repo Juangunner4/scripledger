@@ -49,14 +49,14 @@ public class BrandsService {
         return brandsRepository.findById(objectId).map(Brand::getTokens);
     }
 
-    public Uni<Uni<String>> mintTokens(MintTokensRequest request) {
+    public Uni<String> mintTokens(MintTokensRequest request) {
         ObjectId objectId = new ObjectId(request.getBrandId());
         return brandsRepository.findById(objectId).flatMap(brand -> {
 
             if (brand == null) {
                 return Uni.createFrom().failure(new RuntimeException("Brand not found"));
             }
-            return solanaService.initializeMintTokens(request.getTokenAccountPublicKeyStr(), request.getAmount())
+            return solanaService.mintTokens(request.getRecipientTokenPublicKeyStr(), request.getAmount())
                     .flatMap(txSignature -> {
                         List<Token> tokenList = new ArrayList<>();
                         Token token = new Token();
