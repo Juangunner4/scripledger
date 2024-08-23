@@ -25,10 +25,9 @@ public class BrandsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Brand> createBrand(Brand brand) {
-        LOGGER.info("Creating brand: " + brand);
-        LOGGER.info("Received transaction: " + brand);
+        LOGGER.info("Creating brand: " + brand.getBrandName());
         return brandsService.createBrand(brand)
-                .onItem().invoke(createdBrand -> LOGGER.info("Brand created: " + createdBrand))
+                .onItem().invoke(createdBrand -> LOGGER.info("Brand created: " + createdBrand.getBrandName()))
                 .onFailure().invoke(Throwable::printStackTrace);
     }
 

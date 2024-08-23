@@ -27,7 +27,7 @@ public class BrandsService {
     private static final Logger LOGGER = Logger.getLogger(BrandsService.class);
 
     public Uni<Brand> createBrand(Brand brand) {
-        LOGGER.info("Service: Persisting brand: " + brand);
+        LOGGER.info("Service: Persisting brand: " + brand.getBrandName());
         return checkIfBrandExists(brand).flatMap(exists -> {
             if (exists) {
                 return Uni.createFrom().failure(new RuntimeException("Brand with brand " + brand.getBrandName() + " already exists"));

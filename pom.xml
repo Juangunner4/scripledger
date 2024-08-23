@@ -96,9 +96,9 @@
 
         <!-- Blockchain dependencies -->
         <dependency>
-            <groupId>com.github.p2p-org</groupId>
+            <groupId>org.p2p</groupId>
             <artifactId>solanaj</artifactId>
-            <version>a75b4a8</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.web3j</groupId>

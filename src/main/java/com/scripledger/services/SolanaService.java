@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 public class SolanaService {
@@ -173,9 +172,7 @@ public class SolanaService {
                 logTransactionInstruction(createAccountInstruction);
 
                 List<Account> signers = Arrays.asList(owner, tokenAccount);
-                String result = sendTransaction(transaction, signers).toString();
-                LOGGER.info(result);
-
+                sendTransaction(transaction, signers).toString();
                 return tokenPublicKey.toString();
             } catch (Exception e) {
                 LOGGER.error("Failed to create brand tokens", e);
