@@ -1,6 +1,7 @@
 package com.scripledger.models;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
+import io.smallrye.common.constraint.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.ObjectId;
@@ -12,18 +13,10 @@ import java.util.Date;
 @Setter
 public class Transaction {
     private ObjectId id;
-    private Token token;
-    private String senderPublicKey;
-    private String recipientPublicKey;
-    private double amount;
+    @NotNull
+    private String publicKey;
     private Date timestamp;
-    private String transactionLabel;
-    private String note;
-    private BlockchainDetails blockchainDetails;
+    @NotNull
+    private String transactionHash;
 
-    @Getter
-    @Setter
-    public static class BlockchainDetails {
-        private String transactionHash;
-    }
 }

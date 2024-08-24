@@ -57,6 +57,11 @@ public class UserAccountService {
         return userAccountRepository.findById(objectId);
     }
 
+    public Uni<UserAccount> getAccountByPublicKey(String publicKey) {
+        LOGGER.info("Retrieving account with publicKey: " + publicKey);
+        return userAccountRepository.find("publicKey", publicKey).firstResult();
+    }
+
     public Uni<Response> adminAction(ObjectId accountId, AdminActionRequest request) {
         return userAccountRepository.findById(accountId)
                 .flatMap(userAccount -> {

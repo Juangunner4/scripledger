@@ -8,7 +8,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
 
-@Path("/transactions")
+import java.util.List;
+
+@Path("/transaction")
 public class TransactionResource {
 
     @Inject
@@ -20,10 +22,10 @@ public class TransactionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Transaction> createTransaction(Transaction transaction) {
-        LOGGER.info("Received transaction: " + transaction);
-        return transactionService.createTransaction(transaction)
-                .onItem().invoke(trans -> LOGGER.info("Transaction created: " + trans))
+    public Uni<Transaction> storeTransaction(Transaction transaction) {
+        LOGGER.info("Received transaction: " + transaction.getTransactionHash());
+        return transactionService.storeTransaction(transaction)
+                .onItem().invoke(trans -> LOGGER.info("Transaction created: " + trans.getTransactionHash()))
                 .onFailure().invoke(Throwable::printStackTrace);
     }
 
@@ -33,7 +35,17 @@ public class TransactionResource {
     public Uni<Transaction> getTransaction(@PathParam("transactionId") String transactionId) {
         LOGGER.info("Fetching transaction with ID: " + transactionId);
         return transactionService.getTransaction(transactionId)
-                .onItem().invoke(trans -> LOGGER.info("Transaction fetched: " + trans))
+                .onItem().invoke(trans -> LOGGER.info("Transaction fetched: " + trans.getTransactionHash()))
+                .onFailure().invoke(Throwable::printStackTrace);
+    }
+
+    @GET
+    @Path("/user/{publicKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<List<Transaction>> getAllTransactionsForUser(@PathParam("publicKey") String publicKey) {
+        LOGGER.info("Fetching transactions for publicKey: " + publicKey);
+        return transactionService.getAllTransactionsForUser(publicKey)
+                .onItem().invoke(() -> {})
                 .onFailure().invoke(Throwable::printStackTrace);
     }
 }
