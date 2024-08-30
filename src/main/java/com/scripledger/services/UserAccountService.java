@@ -38,17 +38,14 @@ public class UserAccountService {
                 });
     }
 
-    public Uni<UserAccount> createAccount(String username) {
-        LOGGER.info("Service: Creating account for username: " + username);
+    public Uni<UserAccount> createAccount(UserAccount userAccount) {
+        LOGGER.info("Service: Creating account for username: " + userAccount.getUsername());
+        return isUserRegistered(userAccount, createNewAccount(userAccount), "Failed to create account");
+    }
 
-        return checkIfUserExists(username)
-                .flatMap(exists -> {
-                    if (exists) {
-                        return Uni.createFrom().failure(new RuntimeException("User with username " + username + " already exists"));
-                    } else {
-                        return createNewAccount(username);
-                    }
-                }).onFailure().invoke(ex -> LOGGER.error("Failed to create account", ex));
+    public Uni<UserAccount> registerUser(UserAccount userAccount) {
+        LOGGER.info("Service: Registering account for username: " + userAccount.getUsername());
+        return isUserRegistered(userAccount, registerNewAccount(userAccount), "Failed to register account");
     }
 
     public Uni<UserAccount> getAccountById(String accountId) {
@@ -88,7 +85,7 @@ public class UserAccountService {
                                 new Account(request.getAccountPublicKey().getBytes()),  // Assuming the request has the private key for the admin account
                                 request.getAccountPublicKey(),
                                 request.getTokenId(),
-                                (long) request.getBalance().getAmount(),
+                                request.getBalance().getAmount(),
                                 "brandTokenMintAddress"  // Replace with actual token mint address
                         );
                     } else {
@@ -99,20 +96,37 @@ public class UserAccountService {
                             .map(updatedAccount -> Response.ok(updatedAccount).build()));
                 });
     }
-
+    private Uni<UserAccount> isUserRegistered(UserAccount userAccount, Uni<UserAccount> userAccountUni, String Failed_to_create_account) {
+        return checkIfUserExists(userAccount.getUsername())
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Uni.createFrom().failure(new RuntimeException("User with username " + userAccount.getUsername() + " already exists"));
+                    } else {
+                        return userAccountUni;
+                    }
+                }).onFailure().invoke(ex -> LOGGER.error(Failed_to_create_account, ex));
+    }
     private Uni<Boolean> checkIfUserExists(String username) {
       return userAccountRepository.find("username", username).firstResult().map(Objects::nonNull);
     }
 
-    private Uni<UserAccount> createNewAccount(String username) {
+    private Uni<UserAccount> createNewAccount(UserAccount userAccount) {
         Account solanaAccount = solanaService.createAccount();
         String publicKey = solanaAccount.getPublicKey().toString();
 
-        UserAccount userAccount = new UserAccount();
-        userAccount.setUsername(username);
-        userAccount.setPublicKey(publicKey);
-        userAccount.setKycStatus("pending");
+        UserAccount account = new UserAccount();
+        account.setUsername(userAccount.getUsername());
+        account.setPublicKey(publicKey);
 
-        return userAccountRepository.persist(userAccount);
+        return userAccountRepository.persist(account);
+    }
+
+    private Uni<UserAccount> registerNewAccount(UserAccount userAccount) {
+
+        UserAccount account = new UserAccount();
+        account.setUsername(userAccount.getUsername());
+        account.setPublicKey(userAccount.getPublicKey());
+
+        return userAccountRepository.persist(account);
     }
 }

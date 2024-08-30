@@ -16,6 +16,8 @@ import java.util.Map;
 public class UserAccount extends ReactivePanacheMongoEntityBase {
     private ObjectId id;
     private String username;
+    private String email;
+    private String phoneNumber;
     private String publicKey;
     private String kycStatus;
     private Date firstTxnTimestamp;
