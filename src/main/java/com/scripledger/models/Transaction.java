@@ -18,5 +18,6 @@ public class Transaction {
     private Date timestamp;
     @NotNull
     private String transactionHash;
+    private String transactionType; // UserTransfer, GiftCardRedemption, Refund...
 
 }

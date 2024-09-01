@@ -100,7 +100,7 @@ public class SolanaService {
         }
     }
 
-    public Uni<String> transferToken(Account sender, String senderTokenAddressStr, String recipientTokenAddressStr, long amount, String tokenMintAddressStr) {
+    public Uni<String> transferToken(Account sender, String senderTokenAddressStr, String recipientTokenAddressStr,String tokenMintAddressStr) {
         try {
             PublicKey senderTokenAddress = new PublicKey(senderTokenAddressStr);
             PublicKey recipientTokenAddress = new PublicKey(recipientTokenAddressStr);
@@ -111,7 +111,6 @@ public class SolanaService {
             byte[] data = ByteBuffer.allocate(9)
                     .order(ByteOrder.LITTLE_ENDIAN)
                     .put((byte) 3) // Transfer instruction index for the Token Program
-                    .putLong(amount)
                     .array();
 
             AccountMeta senderAccountMeta = new AccountMeta(senderTokenAddress, true, true);
@@ -261,7 +260,7 @@ public class SolanaService {
             PublicKey userPublicKey = new PublicKey(userPublicKeyStr);
             PublicKey tokenMintAddress = new PublicKey(brandTokenMintAddress);
 
-            return transferToken(adminAccount, adminAccount.getPublicKey().toString(), userPublicKeyStr, amount, brandTokenMintAddress);
+            return transferToken(adminAccount, adminAccount.getPublicKey().toString(), userPublicKeyStr, brandTokenMintAddress);
         } catch (Exception e) {
             LOGGER.error("Failed to distribute brand tokens", e);
             return Uni.createFrom().failure(new RuntimeException("Failed to distribute brand tokens", e));

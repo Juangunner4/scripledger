@@ -11,7 +11,6 @@ import lombok.Setter;
 public class AdminActionRequest extends ReactivePanacheMongoEntityBase {
     private String accountPublicKey;
     private String tokenId;
-    private Balance balance;
     private String actionType;
     private String category;
     private String note;

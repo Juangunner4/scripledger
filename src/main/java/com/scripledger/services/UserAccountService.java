@@ -54,6 +54,11 @@ public class UserAccountService {
         return userAccountRepository.findById(objectId);
     }
 
+    public Uni<UserAccount> getAccountByUsername(String username) {
+        LOGGER.info("Retrieving account with username: " + username);
+        return userAccountRepository.find("username", username).firstResult();
+    }
+
     public Uni<UserAccount> getAccountByPublicKey(String publicKey) {
         LOGGER.info("Retrieving account with publicKey: " + publicKey);
         return userAccountRepository.find("publicKey", publicKey).firstResult();
@@ -85,7 +90,6 @@ public class UserAccountService {
                                 new Account(request.getAccountPublicKey().getBytes()),  // Assuming the request has the private key for the admin account
                                 request.getAccountPublicKey(),
                                 request.getTokenId(),
-                                request.getBalance().getAmount(),
                                 "brandTokenMintAddress"  // Replace with actual token mint address
                         );
                     } else {
@@ -126,6 +130,8 @@ public class UserAccountService {
         UserAccount account = new UserAccount();
         account.setUsername(userAccount.getUsername());
         account.setPublicKey(userAccount.getPublicKey());
+        account.setEmail(userAccount.getEmail());
+        account.setUsername(userAccount.getUsername());
 
         return userAccountRepository.persist(account);
     }

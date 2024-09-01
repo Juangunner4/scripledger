@@ -12,7 +12,6 @@ public class GiftCard extends ReactivePanacheMongoEntityBase {
     private String cardSerial;
     private String brandName;
     private String tokenId;
-    private Balance balance;
     private String blockchain;
     private String publicKey;
     private String secretKey;

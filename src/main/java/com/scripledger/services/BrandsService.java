@@ -1,6 +1,5 @@
 package com.scripledger.services;
 
-import com.scripledger.models.Balance;
 import com.scripledger.models.Brand;
 import com.scripledger.models.MintTokensRequest;
 import com.scripledger.models.Token;
@@ -61,9 +60,6 @@ public class BrandsService {
                         List<Token> tokenList = new ArrayList<>();
                         Token token = new Token();
 
-                        Balance balance = new Balance();
-                        balance.setTokenName(request.getTokenName());
-                        balance.setAmount(request.getAmount());
                         tokenList.add(token);
                         brand.setTokens(tokenList);
                         return brandsRepository.update(brand)
@@ -83,10 +79,7 @@ public class BrandsService {
         String publicKey = brand.getOwnerPublicKey();
 
         return solanaService.createBrandTokenAccount(publicKey)
-                .flatMap(tokenPublicKey -> {
-                    brand.setTokenPublicKey(tokenPublicKey);
-                    return brandsRepository.update(brand);
-                });
+                .flatMap(tokenPublicKey -> brandsRepository.update(brand));
     }
 
 

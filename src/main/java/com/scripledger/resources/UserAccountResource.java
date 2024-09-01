@@ -51,11 +51,24 @@ public class UserAccountResource {
                 });
     }
     @GET
-    @Path("/{accountId}")
+    @Path("/id/{accountId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> getAccountById(@PathParam("accountId") String accountId) {
-        LOGGER.info("Fetching account with publicKey: " + accountId);
+        LOGGER.info("Fetching account with accountId: " + accountId);
         return userAccountService.getAccountById(accountId)
+                .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())
+                .onFailure().recoverWithItem(throwable -> {
+                    LOGGER.error("Failed to fetch account", throwable);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(throwable.getMessage()).build();
+                });
+    }
+
+    @GET
+    @Path("/username/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> getAccountByUsername(@PathParam("username") String username) {
+        LOGGER.info("Fetching account with username: " + username);
+        return userAccountService.getAccountByUsername(username)
                 .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())
                 .onFailure().recoverWithItem(throwable -> {
                     LOGGER.error("Failed to fetch account", throwable);

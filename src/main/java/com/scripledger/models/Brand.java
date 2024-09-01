@@ -15,7 +15,5 @@ public class Brand {
     private String brandName;
     private String url;
     private String ownerPublicKey;
-    private String tokenPublicKey;
-    private String recipientPublicKey;
     private List<Token> tokens;
 }

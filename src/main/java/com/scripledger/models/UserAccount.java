@@ -21,7 +21,6 @@ public class UserAccount extends ReactivePanacheMongoEntityBase {
     private String publicKey;
     private String kycStatus;
     private Date firstTxnTimestamp;
-    private List<Balance> balances;
     private Map<String, Map<String, String>> thirdPartyAccountProfile;
     private ObjectId alternateAccountId;
     private String customerProfile;
