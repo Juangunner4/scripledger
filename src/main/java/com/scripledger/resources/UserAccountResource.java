@@ -18,23 +18,6 @@ public class UserAccountResource {
     private static final Logger LOGGER = Logger.getLogger(UserAccountResource.class);
 
     @POST
-    @Path("/create")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> createAccount(UserAccount userAccount) {
-        LOGGER.info("Creating account for username: " + userAccount.getUsername());
-        return userAccountService.createAccount(userAccount)
-                .onItem().transform(account -> Response.ok(account).build())
-                .onFailure().recoverWithItem(throwable -> {
-                    LOGGER.error("Failed to create account", throwable);
-                    if (throwable.getMessage().contains("already exists")) {
-                        return Response.status(Response.Status.CONFLICT).entity(throwable.getMessage()).build();
-                    }
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(throwable.getMessage()).build();
-                });
-    }
-
-    @POST
     @Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

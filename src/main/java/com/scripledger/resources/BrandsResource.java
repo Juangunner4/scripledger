@@ -1,14 +1,15 @@
 package com.scripledger.resources;
 
 import com.scripledger.models.Brand;
-import com.scripledger.models.MintTokensRequest;
 import com.scripledger.models.Token;
 import com.scripledger.services.BrandsService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
 import java.util.List;
@@ -20,16 +21,6 @@ public class BrandsResource {
     BrandsService brandsService;
 
     private static final Logger LOGGER = Logger.getLogger(BrandsResource.class);
-
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Brand> createBrand(Brand brand) {
-        LOGGER.info("Creating brand: " + brand.getBrandName());
-        return brandsService.createBrand(brand)
-                .onItem().invoke(createdBrand -> LOGGER.info("Brand created: " + createdBrand.getBrandName()))
-                .onFailure().invoke(Throwable::printStackTrace);
-    }
 
     @GET
     @Path("/{brandId}")
@@ -52,11 +43,4 @@ public class BrandsResource {
     }
 
 
-    @POST
-    @Path("/mintTokens")
-    public Uni<Response> mintTokens(MintTokensRequest request) {
-        return brandsService.mintTokens(request)
-                .map(txSignature -> Response.ok(txSignature).build())
-                .onFailure().recoverWithItem(err -> Response.status(Response.Status.BAD_REQUEST).entity(err.getMessage()).build());
-    }
 }
