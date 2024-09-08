@@ -1,7 +1,7 @@
 package com.scripledger.services;
 
-import com.scripledger.models.Transaction;
-import com.scripledger.models.UserAccount;
+import com.scripledger.collections.Transaction;
+import com.scripledger.collections.UserAccount;
 import com.scripledger.repositories.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -20,9 +20,6 @@ public class TransactionService {
 
     @Inject
     UserAccountService userAccountService;
-
-    @Inject
-    SolanaService solanaService;
 
     private static final Logger LOGGER = Logger.getLogger(TransactionService.class);
 

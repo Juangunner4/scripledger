@@ -1,19 +1,15 @@
-package com.scripledger.models;
+package com.scripledger.collections;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.ObjectId;
 
-import java.util.List;
-
-@MongoEntity(collection="brands")
+@MongoEntity(collection="tokens")
 @Getter
 @Setter
-public class Brand {
+public class Token {
     private ObjectId id;
-    private String brandName;
-    private String url;
     private String ownerPublicKey;
-    private List<Token> tokens;
+    private String mintPublicKey;
 }

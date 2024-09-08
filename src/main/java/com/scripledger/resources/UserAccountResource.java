@@ -1,6 +1,6 @@
 package com.scripledger.resources;
 
-import com.scripledger.models.UserAccount;
+import com.scripledger.collections.UserAccount;
 import com.scripledger.services.UserAccountService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;

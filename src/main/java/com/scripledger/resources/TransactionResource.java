@@ -1,6 +1,6 @@
 package com.scripledger.resources;
 
-import com.scripledger.models.Transaction;
+import com.scripledger.collections.Transaction;
 import com.scripledger.services.TransactionService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;

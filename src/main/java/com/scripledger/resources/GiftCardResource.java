@@ -1,6 +1,6 @@
 package com.scripledger.resources;
 
-import com.scripledger.models.GiftCard;
+import com.scripledger.collections.GiftCard;
 import com.scripledger.models.GiftCardRequest;
 import com.scripledger.services.BrandsService;
 import com.scripledger.services.GiftCardService;

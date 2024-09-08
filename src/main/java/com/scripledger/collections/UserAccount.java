@@ -1,4 +1,4 @@
-package com.scripledger.models;
+package com.scripledger.collections;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
@@ -7,7 +7,6 @@ import lombok.Setter;
 import org.bson.types.ObjectId;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @MongoEntity(collection="accounts")

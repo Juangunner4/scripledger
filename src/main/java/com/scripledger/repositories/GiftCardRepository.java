@@ -1,6 +1,6 @@
 package com.scripledger.repositories;
 
-import com.scripledger.models.GiftCard;
+import com.scripledger.collections.GiftCard;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 

@@ -1,6 +1,6 @@
 package com.scripledger.services;
 
-import com.scripledger.models.GiftCard;
+import com.scripledger.collections.GiftCard;
 import com.scripledger.models.GiftCardRequest;
 import com.scripledger.repositories.GiftCardRepository;
 import io.smallrye.mutiny.Uni;

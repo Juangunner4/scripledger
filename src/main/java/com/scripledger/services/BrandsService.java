@@ -1,7 +1,7 @@
 package com.scripledger.services;
 
-import com.scripledger.models.Brand;
-import com.scripledger.models.Token;
+import com.scripledger.collections.Brand;
+import com.scripledger.collections.Token;
 import com.scripledger.repositories.BrandsRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
