@@ -4,6 +4,7 @@ import com.scripledger.config.NodeClient;
 import com.scripledger.models.AdminActionRequest;
 import com.scripledger.models.IssueCurrencyRequest;
 import com.scripledger.models.TransactionRequest;
+import com.scripledger.services.NodeService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -16,6 +17,9 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 @Path("/token")
 public class NodeClientResource {
     @Inject
+    NodeService nodeService;
+
+    @Inject
     @RestClient
     NodeClient nodeClient;
 
@@ -24,7 +28,7 @@ public class NodeClientResource {
     @Path("/issue_business_currency")
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<Response> issueBusinessCurrency(IssueCurrencyRequest request) {
-        return nodeClient.issueBusinessCurrency(request)
+        return nodeService.issueBusinessCurrency(request)
                 .onItem().transform(response -> Response.ok(response).build())
                 .onFailure().recoverWithItem(th -> Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(th.getMessage()).build());
     }
