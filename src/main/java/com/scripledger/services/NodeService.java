@@ -1,9 +1,8 @@
 package com.scripledger.services;
 
-import com.scripledger.config.NodeClient;
-import com.scripledger.models.IssueCurrencyRequest;
-import com.scripledger.models.IssueCurrencyResponse;
 import com.scripledger.collections.Transaction;
+import com.scripledger.config.NodeClient;
+import com.scripledger.models.*;
 import com.scripledger.repositories.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,6 +34,35 @@ public class NodeService {
                     transaction.setTransactionType("issueBusinessCurrency");
                     transaction.setTimestamp(new Date());
                     LOGGER.info("Business mintPubKey: " + response.getMintPubKey());
+                    transactionRepository.persist(transaction);
+                })
+                .onFailure().invoke(th -> LOGGER.error("Error when processing Node.js response: " + th.getMessage()));
+    }
+
+    public Uni<TransactionResponse> transactionFromBusinessAccount(TransactionRequest request) {
+        LOGGER.info("");
+        return nodeClient.transactionFromBusinessAccount(request)
+                .onItem().invoke(response -> {
+                    Transaction transaction = new Transaction();
+                    transaction.setPublicKey(request.getMintPubKey());
+                    transaction.setTransactionHash(response.getTransactionHash());
+                    transaction.setTransactionType("transactionFromBusinessAccount");
+                    transaction.setTimestamp(new Date());
+                    LOGGER.info("transaction from Business account to recipient: " + request.getRecipientPubKey());
+                    transactionRepository.persist(transaction);
+                });
+    }
+
+    public Uni<AdminActionResponse> adminActions(AdminActionRequest request) {
+        LOGGER.info("");
+        return nodeClient.adminActions(request)
+                .onItem().invoke(response -> {
+                    Transaction transaction = new Transaction();
+                    transaction.setPublicKey(request.getAccountPublicKey());
+                    transaction.setTransactionHash(response.getTransactionHash());
+                    transaction.setTransactionType("AdminAction"+request.getActionType());
+                    transaction.setTimestamp(new Date());
+                    LOGGER.info("admin Action : " + request.getActionType());
                     transactionRepository.persist(transaction);
                 });
     }
