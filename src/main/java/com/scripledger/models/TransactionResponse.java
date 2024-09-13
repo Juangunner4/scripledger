@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class TransactionResponse {
 
-    public String transactionHash;
+    private String transactionHash;
 
 }

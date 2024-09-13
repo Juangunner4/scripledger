@@ -17,7 +17,7 @@ public class UserAccount extends ReactivePanacheMongoEntityBase {
     private String username;
     private String email;
     private String phoneNumber;
-    private String publicKey;
+    private String accountPublicKey;
     private String kycStatus;
     private Date firstTxnTimestamp;
     private Map<String, Map<String, String>> thirdPartyAccountProfile;

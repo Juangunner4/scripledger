@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AdminActionResponse {
-    public String transactionHash;
+    private String transactionHash;
 }

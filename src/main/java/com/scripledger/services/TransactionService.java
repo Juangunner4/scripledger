@@ -26,7 +26,7 @@ public class TransactionService {
     public Uni<Transaction> storeTransaction(Transaction transaction) {
         return checkForUserAccount(transaction.getPublicKey()).flatMap(userAccount -> {
             transaction.setTransactionHash(transaction.getTransactionHash());
-            transaction.setPublicKey(userAccount.getPublicKey());
+            transaction.setPublicKey(userAccount.getAccountPublicKey());
             transaction.setTimestamp(new Date());
             LOGGER.info("Service: Persisting transaction: " + transaction.getTransactionHash());
             return transactionRepository.persist(transaction);
@@ -34,7 +34,7 @@ public class TransactionService {
     }
 
     public Uni<List<Transaction>> getAllTransactionsForUser(String publicKey){
-        return checkForUserAccount(publicKey).flatMap(user -> transactionRepository.find("publicKey", user.getPublicKey()).list());
+        return checkForUserAccount(publicKey).flatMap(user -> transactionRepository.find("publicKey", user.getAccountPublicKey()).list());
     }
 
     public Uni<Transaction> getTransaction(String transactionId) {
@@ -54,12 +54,4 @@ public class TransactionService {
                 });
     }
 
-    private Uni<Transaction> processTransaction(String transactionHash) {
-
-//
-//        return solanaService.createBrandTokenAccount()
-//                .flatMap(tokenPublicKey -> {
-//                });
-        return null;
-    }
 }

@@ -19,8 +19,6 @@ public class MongoConfig {
     String connectionString;
 
     void onStart(@Observes StartupEvent ev) {
-        LOG.info("MongoDB Connection String: " + connectionString);
-
         if (connectionString == null || connectionString.isEmpty()) {
             LOG.error("MongoDB Connection String is not set!");
             throw new IllegalArgumentException("MongoDB Connection String is not set");

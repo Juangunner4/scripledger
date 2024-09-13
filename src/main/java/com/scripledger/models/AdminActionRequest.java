@@ -7,10 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AdminActionRequest extends ReactivePanacheMongoEntityBase {
-    private String accountPublicKey;
-    private String tokenId;
+    private String userPubKey;
+    private String businessAcctSecretKeyBase58;
+    private String mintPubKey;
     private String actionType;
-    private String category;
-    private String note;
 
 }

@@ -80,8 +80,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client</artifactId>
         </dependency>
-
-        <!-- MongoDB dependencies -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-mongodb-client</artifactId>
@@ -89,6 +87,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-mongodb-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client-reactive-jackson</artifactId>
         </dependency>
 
         <!-- Lombok dependency -->
@@ -115,6 +117,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.17.1</version>
         </dependency>
 
     </dependencies>

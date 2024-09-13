@@ -26,7 +26,7 @@ public class UserAccountService {
                     }
                     return userAccountRepository.update(userAccount)
                             .map(updatedAccount -> {
-                                LOGGER.info("Updated account with ID: " + updatedAccount.getPublicKey());
+                                LOGGER.info("Updated account with ID: " + updatedAccount.getAccountPublicKey());
                                 return updatedAccount;
                             });
                 });
@@ -34,7 +34,6 @@ public class UserAccountService {
 
 
     public Uni<UserAccount> registerUser(UserAccount userAccount) {
-        LOGGER.info("Service: Registering account for username: " + userAccount.getUsername());
         return isUserRegistered(userAccount, registerNewAccount(userAccount), "Failed to register account");
     }
 
@@ -69,13 +68,6 @@ public class UserAccountService {
     }
 
     private Uni<UserAccount> registerNewAccount(UserAccount userAccount) {
-
-        UserAccount account = new UserAccount();
-        account.setUsername(userAccount.getUsername());
-        account.setPublicKey(userAccount.getPublicKey());
-        account.setEmail(userAccount.getEmail());
-        account.setUsername(userAccount.getUsername());
-
-        return userAccountRepository.persist(account);
+        return userAccountRepository.persist(userAccount);
     }
 }

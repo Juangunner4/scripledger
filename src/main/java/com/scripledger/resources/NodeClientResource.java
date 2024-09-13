@@ -1,8 +1,8 @@
 package com.scripledger.resources;
 
 import com.scripledger.models.AdminActionRequest;
-import com.scripledger.models.IssueCurrencyRequest;
-import com.scripledger.models.TransactionRequest;
+import com.scripledger.models.MintTokenRequest;
+import com.scripledger.models.TransferRequest;
 import com.scripledger.services.NodeService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -19,26 +19,26 @@ public class NodeClientResource {
 
 
     @POST
-    @Path("/issue_business_currency")
+    @Path("/mint")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Uni<Response> issueBusinessCurrency(IssueCurrencyRequest request) {
-        return nodeService.issueBusinessCurrency(request)
+    public Uni<Response> mintTokensForBusiness(MintTokenRequest request) {
+        return nodeService.mintBusinessTokens(request)
                 .onItem().transform(response -> Response.ok(response).build())
                 .onFailure().recoverWithItem(th -> Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(th.getMessage()).build());
     }
 
     @POST
-    @Path("/transaction_from_business_account")
+    @Path("/transfer")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Uni<Response> transactionFromBusinessAccount(TransactionRequest request) {
-        return nodeService.transactionFromBusinessAccount(request)
+    public Uni<Response> transferTokenFromBusiness(TransferRequest request) {
+        return nodeService.transferFromBusiness(request)
                 .onItem().transform(response -> Response.ok(response).build())
                 .onFailure().recoverWithItem(th -> Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(th.getMessage()).build());
     }
 
     // Admin Actions Endpoint
     @POST
-    @Path("/admin_actions")
+    @Path("/admin")
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<Response> adminActions(AdminActionRequest request) {
         return nodeService.adminActions(request)

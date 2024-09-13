@@ -13,13 +13,13 @@ public interface NodeClient {
     @Path("/issue_business_currency")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<IssueCurrencyResponse> issueBusinessCurrency(IssueCurrencyRequest request);
+    Uni<MintTokenResponse> issueBusinessCurrency(MintTokenRequest request);
 
     @POST
     @Path("/transaction_from_business_account")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<TransactionResponse> transactionFromBusinessAccount(TransactionRequest request);
+    Uni<TransactionResponse> transactionFromBusinessAccount(TransferRequest request);
 
     @POST
     @Path("/admin_actions")
