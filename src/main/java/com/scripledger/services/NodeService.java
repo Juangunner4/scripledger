@@ -47,22 +47,22 @@ public class NodeService {
                             LOGGER.info("User found with public key: " + publicKey);
 
                             return nodeClient.issueBusinessCurrency(request)
-                                    .onItem().transformToUni(response -> {
-                                        LOGGER.info("Business mintPubKey: " + response.getMintPubKey());
+                                    .onItem().transformToUni(mintTokenResponse -> {
+                                        LOGGER.info("Business mintPubKey: " + mintTokenResponse.getMintPubKey());
                                         Transaction transaction = new Transaction();
-                                        transaction.setPublicKey(response.getMintPubKey());
-                                        transaction.setTransactionHash(response.getInitialSupplyTxnHash());
+                                        transaction.setPublicKey(mintTokenResponse.getMintPubKey());
+                                        transaction.setTransactionHash(mintTokenResponse.getInitialSupplyTxnHash());
                                         transaction.setTransactionType("issueBusinessCurrency");
                                         transaction.setTimestamp(new Date());
 
                                         return transactionRepository.persist(transaction)
-                                                .onItem().invoke(() -> LOGGER.info("Transaction persisted to the DB"))
+                                                .onItem().invoke(() -> LOGGER.info("Mint transaction action persisted: "+ transaction.getTransactionHash()))
                                                 .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
-                                                .onItem().transformToUni(v -> tokenService.createToken(publicKey, response.getMintPubKey())
-                                                        .onItem().invoke(() -> LOGGER.info("Token created with mintPubKey: " + response.getMintPubKey()))
+                                                .onItem().transformToUni(v -> tokenService.createToken(publicKey, mintTokenResponse.getMintPubKey())
+                                                        .onItem().invoke(() -> LOGGER.info("Token created with mintPubKey: " + mintTokenResponse.getMintPubKey()))
                                                         .onItem().transform(token -> {
                                                             brandsService.updateBrandWithToken(token);
-                                                            return response;
+                                                            return mintTokenResponse;
                                                         }));
                                     })
                                     .onFailure().invoke(th -> LOGGER.error("Error when processing Node.js response: " + th.getMessage()));
@@ -91,15 +91,19 @@ public class NodeService {
                     .onItem().transformToUni(userAccount -> {
                         if (userAccount != null) {
                             return nodeClient.transactionFromBusinessAccount(request)
-                                    .onItem().invoke(response -> {
+                                    .onItem().transformToUni(transactionResponse -> {
                                         Transaction transaction = new Transaction();
                                         transaction.setPublicKey(publicKey);
-                                        transaction.setTransactionHash(response.getTransactionHash());
+                                        transaction.setTransactionHash(transactionResponse.getTransactionHash());
                                         transaction.setTransactionType("transactionFromBusinessAccount");
                                         transaction.setTimestamp(new Date());
-                                        LOGGER.info("Transaction from business account to recipient: " + transaction.getTransactionHash());
-                                        transactionRepository.persist(transaction);
-                                    });
+
+                                        return transactionRepository.persist(transaction)
+                                                .onItem().invoke(() -> LOGGER.info("Transfer transaction action persisted: " + transaction.getTransactionHash()))
+                                                .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
+                                                .replaceWith(transactionResponse);
+                                    })
+                                    .onFailure().invoke(th -> LOGGER.error("Error when processing Node.js response: " + th.getMessage()));
                         } else {
                             LOGGER.error("User with public key: " + publicKey + " not found in the system.");
                             return Uni.createFrom().failure(new RuntimeException("User not found"));
@@ -112,6 +116,7 @@ public class NodeService {
             return Uni.createFrom().failure(e);
         }
     }
+
 
 
     public Uni<AdminActionResponse> adminActions(AdminActionRequest request) {
@@ -124,26 +129,32 @@ public class NodeService {
                     .onItem().transformToUni(userAccount -> {
                         if (userAccount != null) {
                             return nodeClient.adminActions(request)
-                                    .onItem().invoke(response -> {
+                                    .onItem().transformToUni(adminActionResponse -> {
                                         Transaction transaction = new Transaction();
                                         transaction.setPublicKey(publicKey);
-                                        transaction.setTransactionHash(response.getTransactionHash());
+                                        transaction.setTransactionHash(adminActionResponse.getTransactionHash());
                                         transaction.setTransactionType("AdminAction" + request.getActionType());
                                         transaction.setTimestamp(new Date());
-                                        LOGGER.info("Transaction Admin action: " + transaction.getTransactionHash());
-                                        transactionRepository.persist(transaction);
-                                    });
+
+                                        return transactionRepository.persist(transaction)
+                                                .onItem().invoke(() -> LOGGER.info("Admin action transaction persisted: " + transaction.getTransactionHash()))
+                                                .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
+                                                .replaceWith(adminActionResponse);
+                                    })
+                                    .onFailure().invoke(th -> LOGGER.error("Error processing admin action: " + th.getMessage()));
                         } else {
                             LOGGER.error("User with public key: " + publicKey + " not found in the system.");
                             return Uni.createFrom().failure(new RuntimeException("User not found"));
                         }
                     })
                     .onFailure().invoke(th -> LOGGER.error("Error when checking user account: " + th.getMessage()));
+
         } catch (Exception e) {
             LOGGER.error("Error extracting public key: " + e.getMessage());
             return Uni.createFrom().failure(e);
         }
     }
+
 
     private String extractPublicKeyFromPrivateKey(String base58PrivateKey) {
         byte[] secretKeyBytes = Base58.decode(base58PrivateKey);

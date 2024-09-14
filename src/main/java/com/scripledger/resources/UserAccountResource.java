@@ -65,7 +65,7 @@ public class UserAccountResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateAccount(UserAccount userAccount) {
         LOGGER.info("Updating account with accountId: " + userAccount.getId());
-        return userAccountService.updateAccount(userAccount.getId())
+        return userAccountService.updateAccount(userAccount)
                 .map(updatedAccount -> {
                     if (updatedAccount != null) {
                         return Response.ok(updatedAccount).build();

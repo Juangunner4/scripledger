@@ -18,10 +18,10 @@ public class UserAccountService {
 
     private static final Logger LOGGER = Logger.getLogger(UserAccountService.class);
 
-    public Uni<UserAccount> updateAccount(ObjectId accountId) {
-        return userAccountRepository.findById(accountId)
-                .flatMap(userAccount -> {
-                    if (userAccount == null) {
+    public Uni<UserAccount> updateAccount(UserAccount userAccount) {
+        return userAccountRepository.findById(userAccount.getId())
+                .flatMap(account -> {
+                    if (account == null) {
                         return Uni.createFrom().nullItem();
                     }
                     return userAccountRepository.update(userAccount)
