@@ -50,7 +50,7 @@ public class UserAccountService {
 
     public Uni<UserAccount> getAccountByPublicKey(String publicKey) {
         LOGGER.info("Retrieving account with publicKey: " + publicKey);
-        return userAccountRepository.find("publicKey", publicKey).firstResult();
+        return userAccountRepository.find("accountPublicKey", publicKey).firstResult();
     }
 
     private Uni<UserAccount> isUserRegistered(UserAccount userAccount, Uni<UserAccount> userAccountUni, String Failed_to_create_account) {
