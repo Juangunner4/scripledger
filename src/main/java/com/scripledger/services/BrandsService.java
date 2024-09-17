@@ -45,6 +45,19 @@ public class BrandsService {
                 });
     }
 
+    public Uni<Brand> getBrandByBrandName(String brandName) {
+        LOGGER.info("Service: Retrieving brand with brandName: " + brandName);
+        return brandsRepository.find("brandName", brandName)
+                .firstResult()
+                .onItem().invoke(brand -> {
+                    if (brand != null) {
+                        LOGGER.info("Brand found: " + brand.getBrandName());
+                    } else {
+                        LOGGER.warn("No Brand found with brandName: " + brandName);
+                    }
+                });
+    }
+
     public Uni<List<Token>> getTokenList(String brandId) {
         ObjectId objectId = new ObjectId(brandId);
         LOGGER.info("Service: Retrieving brand tokens with ID: " + brandId);

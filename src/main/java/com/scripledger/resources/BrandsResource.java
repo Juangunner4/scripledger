@@ -67,5 +67,18 @@ public class BrandsResource {
                 .onFailure().invoke(Throwable::printStackTrace);
     }
 
+    @GET
+    @Path("/{brandName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> getAccountByUsername(@PathParam("brandName") String brandName) {
+        LOGGER.info("Fetching Brand with brandName: " + brandName);
+        return brandsService.getBrandByBrandName(brandName)
+                .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())
+                .onFailure().recoverWithItem(throwable -> {
+                    LOGGER.error("Failed to fetch Brand", throwable);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(throwable.getMessage()).build();
+                });
+    }
+
 
 }
