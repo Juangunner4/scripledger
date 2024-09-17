@@ -3,6 +3,7 @@ package com.scripledger.resources;
 import com.scripledger.collections.UserAccount;
 import com.scripledger.services.UserAccountService;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -20,7 +21,7 @@ public class UserAccountResource {
 
     @POST
     @Path("/register")
-    @RolesAllowed("user")
+    @PermitAll
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> registerUser(UserAccount userAccount) {
@@ -63,6 +64,7 @@ public class UserAccountResource {
 
     @PUT
     @Path("/update")
+    @RolesAllowed("user")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateAccount(UserAccount userAccount) {
