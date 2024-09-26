@@ -38,7 +38,7 @@ public class BrandsResource {
     }
 
     @GET
-    @Path("/{brandId}")
+    @Path("/id/{brandId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Brand> getBrandById(@PathParam("brandId") String brandId) {
         LOGGER.info("Fetching brand with ID: " + brandId);
@@ -48,7 +48,7 @@ public class BrandsResource {
     }
 
     @GET
-    @Path("/{publicKey}")
+    @Path("/publicKey/{publicKey}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Brand> getBrandByPublicKey(@PathParam("publicKey") String publicKey) {
         LOGGER.info("Fetching brand with ID: " + publicKey);
@@ -68,9 +68,9 @@ public class BrandsResource {
     }
 
     @GET
-    @Path("/{brandName}")
+    @Path("/brandName/{brandName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> getAccountByUsername(@PathParam("brandName") String brandName) {
+    public Uni<Response> getBrandByName(@PathParam("brandName") String brandName) {
         LOGGER.info("Fetching Brand with brandName: " + brandName);
         return brandsService.getBrandByBrandName(brandName)
                 .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())

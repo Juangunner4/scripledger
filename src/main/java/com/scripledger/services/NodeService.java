@@ -46,9 +46,15 @@ public class NodeService {
                         if (userAccount != null) {
                             LOGGER.info("User found with public key: " + publicKey);
 
-                            return nodeClient.issueBusinessCurrency(request)
+                            MintTokenRequest nodeClientRequest = new MintTokenRequest();
+                            nodeClientRequest.setInitialSupply(request.getInitialSupply());
+                            nodeClientRequest.setDecimals(request.getDecimals());
+                            nodeClientRequest.setBusinessAcctSecretKeyBase58(request.getBusinessAcctSecretKeyBase58());
+
+                            return nodeClient.issueBusinessCurrency(nodeClientRequest)
                                     .onItem().transformToUni(mintTokenResponse -> {
                                         LOGGER.info("Business mintPubKey: " + mintTokenResponse.getMintPubKey());
+
                                         Transaction transaction = new Transaction();
                                         transaction.setPublicKey(mintTokenResponse.getMintPubKey());
                                         transaction.setTransactionHash(mintTokenResponse.getInitialSupplyTxnHash());
@@ -56,9 +62,9 @@ public class NodeService {
                                         transaction.setTimestamp(new Date());
 
                                         return transactionRepository.persist(transaction)
-                                                .onItem().invoke(() -> LOGGER.info("Mint transaction action persisted: "+ transaction.getTransactionHash()))
+                                                .onItem().invoke(() -> LOGGER.info("Mint transaction action persisted: " + transaction.getTransactionHash()))
                                                 .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
-                                                .onItem().transformToUni(v -> tokenService.createToken(publicKey, mintTokenResponse.getMintPubKey())
+                                                .onItem().transformToUni(v -> tokenService.createToken(publicKey, mintTokenResponse.getMintPubKey(), request)
                                                         .onItem().invoke(() -> LOGGER.info("Token created with mintPubKey: " + mintTokenResponse.getMintPubKey()))
                                                         .onItem().transform(token -> {
                                                             brandsService.updateBrandWithToken(token);
@@ -79,6 +85,7 @@ public class NodeService {
             return Uni.createFrom().failure(e);
         }
     }
+
 
 
     public Uni<TransactionResponse> transferFromBusiness(TransferRequest request) {

@@ -10,6 +10,9 @@ import org.bson.types.ObjectId;
 @Setter
 public class Token {
     private ObjectId id;
+    private String tokenName;
+    private String logoLink;
+    private String unit;
     private String ownerPublicKey;
     private String mintPublicKey;
 }

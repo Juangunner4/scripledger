@@ -3,6 +3,7 @@ package com.scripledger.resources;
 import com.scripledger.collections.UserAccount;
 import com.scripledger.services.UserAccountService;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -47,6 +48,7 @@ public class UserAccountResource {
     }
 
     @GET
+    @PermitAll
     @Path("/username/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> getAccountByUsername(@PathParam("username") String username) {

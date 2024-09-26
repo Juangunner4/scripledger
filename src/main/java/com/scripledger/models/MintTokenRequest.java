@@ -9,5 +9,8 @@ public class MintTokenRequest {
     private String businessAcctSecretKeyBase58;
     private long initialSupply;
     private int decimals;
+    private String tokenName;
+    private String logoLink;
+    private String unit;
 }
 
