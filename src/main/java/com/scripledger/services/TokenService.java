@@ -32,7 +32,7 @@ public class TokenService {
     }
 
     public Uni<Token> getTokenByMintPublicKey(String mintPubKey) {
-        LOGGER.info("Service: Retrieving Brand with ownerPublicKey: " + mintPubKey);
+        LOGGER.info("Service: Retrieving Brand with mintPublicKey: " + mintPubKey);
         return tokenRepository.find("mintPublicKey", mintPubKey)
                 .firstResult()
                 .onItem().invoke(token -> {

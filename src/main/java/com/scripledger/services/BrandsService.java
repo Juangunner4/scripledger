@@ -6,12 +6,14 @@ import com.scripledger.repositories.BrandsRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class BrandsService {
@@ -43,6 +45,25 @@ public class BrandsService {
                         LOGGER.warn("No Brand found with ownerPublicKey: " + publicKey);
                     }
                 });
+    }
+    public Uni<List<Brand>> getBrandsByMintPublicKeys(List<String> mintPubKeys) {
+        LOGGER.info("Fetching brands associated with mintPublicKeys: " + mintPubKeys);
+
+        Document query = new Document("tokens.mintPublicKey", new Document("$in", mintPubKeys));
+
+        LOGGER.info("Generated MongoDB query: " + query.toJson());
+
+        return brandsRepository.find(query).list()
+                .onItem().invoke(brands -> {
+                    if (!brands.isEmpty()) {
+                        LOGGER.info("Brands fetched: " + brands.stream()
+                                .map(Brand::getBrandName)
+                                .collect(Collectors.joining(", ")));
+                    } else {
+                        LOGGER.warn("No brands found for provided mintPublicKeys: " + mintPubKeys);
+                    }
+                })
+                .onFailure().invoke(Throwable::printStackTrace);
     }
 
     public Uni<Brand> getBrandByBrandName(String brandName) {

@@ -10,6 +10,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Path("/brands")
@@ -51,11 +52,30 @@ public class BrandsResource {
     @Path("/publicKey/{publicKey}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Brand> getBrandByPublicKey(@PathParam("publicKey") String publicKey) {
-        LOGGER.info("Fetching brand with ID: " + publicKey);
+        LOGGER.info("Fetching brand with publicKey: " + publicKey);
         return brandsService.getBrandByOwnerPublicKey(publicKey)
                 .onItem().invoke(brand -> LOGGER.info("Brand fetched: " + brand))
                 .onFailure().invoke(Throwable::printStackTrace);
     }
+    @GET
+    @Path("/mintPubKey")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<List<Brand>> getBrandsByMintPublicKey(@QueryParam("mintPubKey") List<String> mintPubKeys) {
+        LOGGER.info("Fetching brands associated with mintPublicKeys: " + mintPubKeys);
+
+        if (mintPubKeys == null || mintPubKeys.isEmpty()) {
+            return Uni.createFrom().failure(new IllegalArgumentException("At least one mintPublicKey must be provided"));
+        }
+
+        if (mintPubKeys.size() == 1 && mintPubKeys.get(0).contains(",")) {
+            mintPubKeys = Arrays.asList(mintPubKeys.get(0).split(","));
+        }
+
+        return brandsService.getBrandsByMintPublicKeys(mintPubKeys)
+                .onItem().invoke(brands -> LOGGER.info("Total Brands fetched: " + brands.size()))
+                .onFailure().invoke(Throwable::printStackTrace);
+    }
+
 
     @GET
     @Path("/{brandId}/tokens")
