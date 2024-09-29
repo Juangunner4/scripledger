@@ -49,6 +49,14 @@ public class BrandsResource {
     }
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<List<Brand>> getAllBrands() {
+        return brandsService.getBrands()
+                .onItem().invoke(brand -> LOGGER.info("Brand fetched: " + brand.size()))
+                .onFailure().invoke(Throwable::printStackTrace);
+    }
+
+    @GET
     @Path("/publicKey/{publicKey}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Brand> getBrandByPublicKey(@PathParam("publicKey") String publicKey) {

@@ -26,7 +26,7 @@ public class UserAccountService {
                     }
                     return userAccountRepository.update(userAccount)
                             .map(updatedAccount -> {
-                                LOGGER.info("Updated account with ID: " + updatedAccount.getAccountPublicKey());
+                                LOGGER.debug("Updated account with ID: " + updatedAccount.getId());
                                 return updatedAccount;
                             });
                 });
@@ -38,18 +38,15 @@ public class UserAccountService {
     }
 
     public Uni<UserAccount> getAccountById(String accountId) {
-        LOGGER.info("Retrieving account with accountId: " + accountId);
         ObjectId objectId = new ObjectId(accountId);
         return userAccountRepository.findById(objectId);
     }
 
     public Uni<UserAccount> getAccountByUsername(String username) {
-        LOGGER.info("Retrieving account with username: " + username);
         return userAccountRepository.find("username", username).firstResult();
     }
 
     public Uni<UserAccount> getAccountByPublicKey(String publicKey) {
-        LOGGER.info("Retrieving account with publicKey: " + publicKey);
         return userAccountRepository.find("accountPublicKey", publicKey).firstResult();
     }
 

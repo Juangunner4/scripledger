@@ -36,7 +36,6 @@ public class NodeClientResource {
                 .onFailure().recoverWithItem(th -> Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(th.getMessage()).build());
     }
 
-    // Admin Actions Endpoint
     @POST
     @Path("/admin")
     @Consumes(MediaType.APPLICATION_JSON)

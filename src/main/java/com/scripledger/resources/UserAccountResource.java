@@ -3,7 +3,6 @@ package com.scripledger.resources;
 import com.scripledger.collections.UserAccount;
 import com.scripledger.services.UserAccountService;
 import io.smallrye.mutiny.Uni;
-import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -48,12 +47,24 @@ public class UserAccountResource {
     }
 
     @GET
-    @PermitAll
     @Path("/username/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> getAccountByUsername(@PathParam("username") String username) {
         LOGGER.info("Fetching account with username: " + username);
         return userAccountService.getAccountByUsername(username)
+                .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())
+                .onFailure().recoverWithItem(throwable -> {
+                    LOGGER.error("Failed to fetch account", throwable);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(throwable.getMessage()).build();
+                });
+    }
+
+    @GET
+    @Path("/publicKey/{publicKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> getAccountByPubicKey(@PathParam("publicKey") String publicKey) {
+        LOGGER.info("Fetching account with publicKey: " + publicKey);
+        return userAccountService.getAccountByPublicKey(publicKey)
                 .onItem().transform(account -> account != null ? Response.ok(account).build() : Response.status(Response.Status.NOT_FOUND).build())
                 .onFailure().recoverWithItem(throwable -> {
                     LOGGER.error("Failed to fetch account", throwable);

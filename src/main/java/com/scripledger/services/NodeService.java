@@ -3,7 +3,6 @@ package com.scripledger.services;
 import com.scripledger.collections.Transaction;
 import com.scripledger.config.NodeClient;
 import com.scripledger.models.*;
-import com.scripledger.repositories.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -18,11 +17,11 @@ import java.util.Date;
 public class NodeService {
 
     @Inject
-    TransactionRepository transactionRepository;
-
-    @Inject
     @RestClient
     NodeClient nodeClient;
+
+    @Inject
+    TransactionService transactionService;
 
     @Inject
     UserAccountService userAccountService;
@@ -61,7 +60,7 @@ public class NodeService {
                                         transaction.setTransactionType("issueBusinessCurrency");
                                         transaction.setTimestamp(new Date());
 
-                                        return transactionRepository.persist(transaction)
+                                        return transactionService.storeTransaction(transaction)
                                                 .onItem().invoke(() -> LOGGER.info("Mint transaction action persisted: " + transaction.getTransactionHash()))
                                                 .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
                                                 .onItem().transformToUni(v -> tokenService.createToken(publicKey, mintTokenResponse.getMintPubKey(), request)
@@ -105,7 +104,7 @@ public class NodeService {
                                         transaction.setTransactionType("transactionFromBusinessAccount");
                                         transaction.setTimestamp(new Date());
 
-                                        return transactionRepository.persist(transaction)
+                                        return transactionService.storeTransaction(transaction)
                                                 .onItem().invoke(() -> LOGGER.info("Transfer transaction action persisted: " + transaction.getTransactionHash()))
                                                 .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
                                                 .replaceWith(transactionResponse);
@@ -143,7 +142,7 @@ public class NodeService {
                                         transaction.setTransactionType("AdminAction" + request.getActionType());
                                         transaction.setTimestamp(new Date());
 
-                                        return transactionRepository.persist(transaction)
+                                        return transactionService.storeTransaction(transaction)
                                                 .onItem().invoke(() -> LOGGER.info("Admin action transaction persisted: " + transaction.getTransactionHash()))
                                                 .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
                                                 .replaceWith(adminActionResponse);
