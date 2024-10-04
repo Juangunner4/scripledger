@@ -1,6 +1,7 @@
 package com.scripledger.resources;
 
 import com.scripledger.collections.Transaction;
+import com.scripledger.models.TransactionRequest;
 import com.scripledger.services.TransactionService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -22,9 +23,9 @@ public class TransactionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Transaction> storeTransaction(Transaction transaction) {
-        LOGGER.info("Received transaction: " + transaction.getTransactionHash());
-        return transactionService.storeTransaction(transaction)
+    public Uni<Transaction> signTransaction(TransactionRequest transactionRequest) {
+        LOGGER.info("Received transaction: " + transactionRequest.getTransaction());
+        return transactionService.signTransaction(transactionRequest)
                 .onItem().invoke(trans -> LOGGER.info("Transaction created: " + trans.getTransactionHash()))
                 .onFailure().invoke(Throwable::printStackTrace);
     }
