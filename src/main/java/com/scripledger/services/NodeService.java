@@ -1,6 +1,7 @@
 package com.scripledger.services;
 
 import com.scripledger.collections.Transaction;
+import com.scripledger.collections.UserAccount;
 import com.scripledger.config.NodeClient;
 import com.scripledger.models.*;
 import io.smallrye.mutiny.Uni;
@@ -9,6 +10,7 @@ import jakarta.inject.Inject;
 import org.bitcoinj.core.Base58;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.p2p.solanaj.core.Account;
 
 import java.util.Date;
@@ -54,16 +56,12 @@ public class NodeService {
                                     .onItem().transformToUni(mintTokenResponse -> {
                                         LOGGER.info("Business mintPubKey: " + mintTokenResponse.getMintPubKey());
 
-                                        Transaction transaction = new Transaction();
-                                        transaction.setPublicKey(mintTokenResponse.getMintPubKey());
-                                        transaction.setTransactionHash(mintTokenResponse.getInitialSupplyTxnHash());
-                                        transaction.setTransactionType("issueBusinessCurrency");
-                                        transaction.setTimestamp(new Date());
+                                        Transaction transaction = setTransaction(userAccount, mintTokenResponse);
 
                                         return transactionService.storeTransaction(transaction)
                                                 .onItem().invoke(() -> LOGGER.info("Mint transaction action persisted: " + transaction.getTransactionHash()))
                                                 .onFailure().invoke(th -> LOGGER.error("Failed to persist transaction: " + th.getMessage()))
-                                                .onItem().transformToUni(v -> tokenService.createToken(publicKey, mintTokenResponse.getMintPubKey(), request)
+                                                .onItem().transformToUni(v -> tokenService.createToken(userAccount.getAccountPublicKey(), mintTokenResponse.getMintPubKey(), request)
                                                         .onItem().invoke(() -> LOGGER.info("Token created with mintPubKey: " + mintTokenResponse.getMintPubKey()))
                                                         .onItem().transform(token -> {
                                                             brandsService.updateBrandWithToken(token);
@@ -85,6 +83,16 @@ public class NodeService {
         }
     }
 
+    @NotNull
+    private static Transaction setTransaction(UserAccount userAccount, MintTokenResponse mintTokenResponse) {
+        Transaction transaction = new Transaction();
+        transaction.setSenderPubKey(userAccount.getAccountPublicKey());
+        transaction.setMintPubKey(mintTokenResponse.getMintPubKey());
+        transaction.setTransactionHash(mintTokenResponse.getInitialSupplyTxnHash());
+        transaction.setTransactionType("issueBusinessCurrency");
+        transaction.setTimestamp(new Date());
+        return transaction;
+    }
 
 
     public Uni<TransactionResponse> transferFromBusiness(TransferRequest request) {
@@ -99,7 +107,8 @@ public class NodeService {
                             return nodeClient.transactionFromBusinessAccount(request)
                                     .onItem().transformToUni(transactionResponse -> {
                                         Transaction transaction = new Transaction();
-                                        transaction.setPublicKey(publicKey);
+                                        transaction.setSenderPubKey(userAccount.getAccountPublicKey());
+                                        transaction.setRecipientPubKey(request.getRecipientPubKey());
                                         transaction.setTransactionHash(transactionResponse.getTransactionHash());
                                         transaction.setTransactionType("transactionFromBusinessAccount");
                                         transaction.setTimestamp(new Date());
@@ -126,7 +135,8 @@ public class NodeService {
 
 
     public Uni<AdminActionResponse> adminActions(AdminActionRequest request) {
-        LOGGER.info("Processing admin action for account: " + request.getUserPubKey());
+        LOGGER.info("Processing admin action for accountPubKey: " + request.getUserPubKey());
+        LOGGER.info("Processing admin action for mintPubKey: " + request.getMintPubKey());
 
         try {
             String publicKey = extractPublicKeyFromPrivateKey(request.getBusinessAcctSecretKeyBase58());
@@ -137,7 +147,8 @@ public class NodeService {
                             return nodeClient.adminActions(request)
                                     .onItem().transformToUni(adminActionResponse -> {
                                         Transaction transaction = new Transaction();
-                                        transaction.setPublicKey(publicKey);
+                                        transaction.setSenderPubKey(userAccount.getAccountPublicKey());
+                                        transaction.setMintPubKey(request.getMintPubKey());
                                         transaction.setTransactionHash(adminActionResponse.getTransactionHash());
                                         transaction.setTransactionType("AdminAction" + request.getActionType());
                                         transaction.setTimestamp(new Date());

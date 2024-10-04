@@ -13,8 +13,9 @@ import java.util.Date;
 @Setter
 public class Transaction {
     private ObjectId id;
-    @NotNull
-    private String publicKey;
+    private String senderPubKey;
+    private String recipientPubKey;
+    private String mintPubKey;
     private Date timestamp;
     @NotNull
     private String transactionHash;

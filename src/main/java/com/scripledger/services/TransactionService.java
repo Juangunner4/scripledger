@@ -24,9 +24,9 @@ public class TransactionService {
     private static final Logger LOGGER = Logger.getLogger(TransactionService.class);
 
     public Uni<Transaction> storeTransaction(Transaction transaction) {
-        return checkForUserAccount(transaction.getPublicKey()).flatMap(userAccount -> {
+        return checkForUserAccount(transaction.getSenderPubKey()).flatMap(userAccount -> {
             transaction.setTransactionHash(transaction.getTransactionHash());
-            transaction.setPublicKey(userAccount.getAccountPublicKey());
+            transaction.setSenderPubKey(userAccount.getAccountPublicKey());
             transaction.setTimestamp(new Date());
             LOGGER.info("Service: Persisting transaction: " + transaction.getTransactionHash());
             return transactionRepository.persist(transaction);
