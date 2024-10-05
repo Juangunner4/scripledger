@@ -1,8 +1,6 @@
 package com.scripledger.resources;
 
-import com.scripledger.collections.GiftCard;
 import com.scripledger.models.GiftCardRequest;
-import com.scripledger.services.BrandsService;
 import com.scripledger.services.GiftCardService;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -11,34 +9,34 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
-import java.util.List;
-
 @Path("/giftcard")
 public class GiftCardResource {
 
     @Inject
     GiftCardService giftCardService;
 
-    private static final Logger LOGGER = Logger.getLogger(BrandsService.class);
+    private static final Logger LOGGER = Logger.getLogger(GiftCardResource.class);
+
     @POST
-    @Path("/create")
+    @Path("/new")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> createGiftCards(List<GiftCardRequest> requests) {
-        LOGGER.info("Creating gift cards: " + requests);
-        return giftCardService.createNewPhysical(requests)
-                .onItem().invoke(giftcards -> LOGGER.info("request fetched: " + giftcards))
+    public Uni<Response> createNewGiftCard(GiftCardRequest request) {
+        LOGGER.info("Creating new gift card with serial: " + request.getCardSerial());
+        return giftCardService.createNewGiftCard(request)
+                .onItem().invoke(giftCard -> {})
                 .onFailure().invoke(Throwable::printStackTrace);
     }
 
-    @GET
-    @Path("/{cardSerial}")
+    @POST
+    @Path("/activate")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<GiftCard> getGiftCard(@PathParam("cardSerial") String cardSerial) {
-        LOGGER.info("Fetching brand with ID: " + cardSerial);
-        return giftCardService.getGiftCard(cardSerial)
-                .onItem().invoke(brand -> LOGGER.info("cardSerial fetched: " + brand))
+    public Uni<Response> activateGiftCard(@QueryParam("cardSerial") String cardSerial,
+                                          @QueryParam("giftCardPublicKey") String giftCardPublicKey) {
+        LOGGER.info("Activating gift card with serial: " + cardSerial + " or publicKey: " + giftCardPublicKey);
+        return giftCardService.activateGiftCard(cardSerial, giftCardPublicKey)
+                .onItem().invoke(result -> LOGGER.info("Gift card activated: " + result))
                 .onFailure().invoke(Throwable::printStackTrace);
     }
-
 }

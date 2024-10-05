@@ -13,6 +13,7 @@ import org.p2p.solanaj.core.Account;
 import org.p2p.solanaj.core.TransactionInstruction;
 import org.p2p.solanaj.programs.SystemProgram;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -34,7 +35,7 @@ public class TransactionService {
     public Uni<Transaction> storeTransaction(Transaction transaction) {
         return checkForUserAccount(transaction.getSenderPubKey()).flatMap(userAccount -> {
             transaction.setSenderPubKey(userAccount.getAccountPublicKey());
-            transaction.setTimestamp(new Date());
+            transaction.setTimestamp(Date.from(Instant.now()));
             LOGGER.info("Service: Persisting transaction: " + transaction.getTransactionHash());
             return transactionRepository.persist(transaction);
         });
@@ -64,7 +65,7 @@ public class TransactionService {
                                     Transaction transactionRecord = new Transaction();
                                     transactionRecord.setTransactionHash(signature);
                                     transactionRecord.setSenderPubKey(String.valueOf(account.getAccountPublicKey()));
-                                    transactionRecord.setTimestamp(new Date());
+                                    transactionRecord.setTimestamp(Date.from(Instant.now()));
                                     transactionRecord.setTransactionType("signTransaction");
                                     return storeTransaction(transactionRecord);
                                 });

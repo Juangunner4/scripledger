@@ -13,6 +13,7 @@ import org.jboss.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.p2p.solanaj.core.Account;
 
+import java.time.Instant;
 import java.util.Date;
 
 @ApplicationScoped
@@ -90,7 +91,7 @@ public class NodeService {
         transaction.setMintPubKey(mintTokenResponse.getMintPubKey());
         transaction.setTransactionHash(mintTokenResponse.getInitialSupplyTxnHash());
         transaction.setTransactionType("issueBusinessCurrency");
-        transaction.setTimestamp(new Date());
+        transaction.setTimestamp(Date.from(Instant.now()));
         return transaction;
     }
 
@@ -111,7 +112,7 @@ public class NodeService {
                                         transaction.setRecipientPubKey(request.getRecipientPubKey());
                                         transaction.setTransactionHash(transactionResponse.getTransactionHash());
                                         transaction.setTransactionType("transactionFromBusinessAccount");
-                                        transaction.setTimestamp(new Date());
+                                        transaction.setTimestamp(Date.from(Instant.now()));
 
                                         return transactionService.storeTransaction(transaction)
                                                 .onItem().invoke(() -> LOGGER.info("Transfer transaction action persisted: " + transaction.getTransactionHash()))
@@ -133,7 +134,6 @@ public class NodeService {
     }
 
 
-
     public Uni<AdminActionResponse> adminActions(AdminActionRequest request) {
         LOGGER.info("Processing admin action for accountPubKey: " + request.getUserPubKey());
         LOGGER.info("Processing admin action for mintPubKey: " + request.getMintPubKey());
@@ -151,7 +151,7 @@ public class NodeService {
                                         transaction.setMintPubKey(request.getMintPubKey());
                                         transaction.setTransactionHash(adminActionResponse.getTransactionHash());
                                         transaction.setTransactionType("AdminAction" + request.getActionType());
-                                        transaction.setTimestamp(new Date());
+                                        transaction.setTimestamp(Date.from(Instant.now()));
 
                                         return transactionService.storeTransaction(transaction)
                                                 .onItem().invoke(() -> LOGGER.info("Admin action transaction persisted: " + transaction.getTransactionHash()))
