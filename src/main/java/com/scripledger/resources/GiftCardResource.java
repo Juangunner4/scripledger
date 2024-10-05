@@ -36,7 +36,18 @@ public class GiftCardResource {
                                           @QueryParam("giftCardPublicKey") String giftCardPublicKey) {
         LOGGER.info("Activating gift card with serial: " + cardSerial + " or publicKey: " + giftCardPublicKey);
         return giftCardService.activateGiftCard(cardSerial, giftCardPublicKey)
-                .onItem().invoke(result -> LOGGER.info("Gift card activated: " + result))
-                .onFailure().invoke(Throwable::printStackTrace);
+                .onItem().transform(result -> {
+                    if (result.getStatus() == Response.Status.OK.getStatusCode()) {
+                        LOGGER.info("Gift card successfully activated");
+                    } else {
+                        LOGGER.error("Gift card activation failed: " + result.getEntity().toString());
+                    }
+                    return result;
+                })
+                .onFailure().recoverWithItem(th -> {
+                    LOGGER.error("Gift card activation failed: " + th.getMessage());
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity("Failed to activate gift card: " + th.getMessage()).build();
+                });
     }
 }

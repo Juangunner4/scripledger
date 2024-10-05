@@ -43,6 +43,7 @@ public class GiftCardService {
 
         GiftCard giftCard = new GiftCard();
         giftCard.setCardSerial(request.getCardSerial());
+        giftCard.setBrandName(request.getBrandName());
         giftCard.setTokenId(request.getTokenId());
         giftCard.setPublicKey(publicKey);
         giftCard.setSecretKey(secretKey);
@@ -80,8 +81,17 @@ public class GiftCardService {
 
                     return callJsEndpointForTransaction(giftCard.getPublicKey(), mintPubKey)
                             .map(response -> {
-                                giftCard.setStatus("redeemed");
-                                return Response.ok("Gift card activated successfully").build();
+                                if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                                    giftCard.setStatus("redeemed");
+                                    return Response.ok("Gift card activated successfully").build();
+                                } else {
+                                    LOGGER.error("Failed to activate gift card, received error: " + response.getStatus());
+                                    return Response.status(response.getStatus()).entity(response.getEntity()).build();
+                                }
+                            })
+                            .onFailure().recoverWithItem(failure -> {
+                                LOGGER.error("Failed to activate gift card", failure);
+                                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(failure.getMessage()).build();
                             });
                 })
                 .onFailure().recoverWithItem(failure -> {
@@ -109,13 +119,20 @@ public class GiftCardService {
 
         return nodeService.transferFromBusiness(transferRequest)
                 .onItem().transform(transactionResponse -> {
-                    TransactionResponse response = new TransactionResponse();
-                    response.setTransactionHash(transactionResponse.getTransactionHash());
-                    return Response.ok(response).build();
+                    if (transactionResponse != null && transactionResponse.getTransactionHash() != null) {
+                        TransactionResponse response = new TransactionResponse();
+                        response.setTransactionHash(transactionResponse.getTransactionHash());
+                        LOGGER.info("Transaction successful, hash: " + transactionResponse.getTransactionHash());
+                        return Response.ok(response).build();
+                    } else {
+                        LOGGER.error("Transaction failed: Invalid response from Node.js service");
+                        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Transaction failed: Invalid response from Node.js service").build();
+                    }
                 })
                 .onFailure().recoverWithItem(th -> {
                     LOGGER.error("Failed to complete the transaction: " + th.getMessage());
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Transaction failed").build();
+                    return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                            .entity("Transaction service unavailable due to: " + th.getMessage()).build();
                 });
     }
 
