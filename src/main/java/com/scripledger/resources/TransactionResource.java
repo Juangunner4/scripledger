@@ -21,6 +21,7 @@ public class TransactionResource {
 
 
     @POST
+    @Path("/sign")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Transaction> signTransaction(TransactionRequest transactionRequest) {

@@ -10,9 +10,8 @@ import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 import org.jboss.logging.Logger;
 import org.p2p.solanaj.core.Account;
-import org.p2p.solanaj.core.TransactionInstruction;
-import org.p2p.solanaj.programs.SystemProgram;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
@@ -49,14 +48,7 @@ public class TransactionService {
                     try {
                         Account owner = solanaService.getOwnerAccount();
 
-                        org.p2p.solanaj.core.Transaction transaction = new org.p2p.solanaj.core.Transaction();
-
-                        TransactionInstruction instruction = SystemProgram.transfer(
-                                userAccount.getPublicKey(),
-                                owner.getPublicKey(),
-                                1000
-                        );
-                        transaction.addInstruction(instruction);
+                         org.p2p.solanaj.core.Transaction transaction = solanaService.deserializeTransaction(transactionRequest.getTransaction());
 
                         List<Account> signers = Arrays.asList(owner, userAccount);
 
@@ -69,9 +61,8 @@ public class TransactionService {
                                     transactionRecord.setTransactionType("signTransaction");
                                     return storeTransaction(transactionRecord);
                                 });
-                    } catch (Exception e) {
-                        LOGGER.error("Error signing transaction", e);
-                        return Uni.createFrom().failure(new RuntimeException("Transaction failed", e));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 })
                 .onFailure().invoke(th -> LOGGER.error("Failed to sign transaction: " + th.getMessage()));

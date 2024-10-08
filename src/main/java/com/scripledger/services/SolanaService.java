@@ -8,12 +8,12 @@ import org.bitcoinj.core.Base58;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.p2p.solanaj.core.Account;
-import org.p2p.solanaj.core.PublicKey;
 import org.p2p.solanaj.core.Transaction;
 import org.p2p.solanaj.rpc.RpcClient;
 import org.p2p.solanaj.rpc.RpcException;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 
 @ApplicationScoped
@@ -51,6 +51,21 @@ public class SolanaService {
         byte[] secretKeyBytes = Base58.decode(base58PrivateKey);
         return new Account(secretKeyBytes);
     }
+
+    public Transaction deserializeTransaction(String base64Transaction) {
+        try {
+            byte[] transactionBytes = Base64.getDecoder().decode(base64Transaction);
+
+            Transaction transaction = Transaction.deserialize(transactionBytes);
+
+            LOGGER.info("Transaction deserialized successfully.");
+            return transaction;
+        } catch (Exception e) {
+            LOGGER.error("Failed to deserialize transaction", e);
+            throw new RuntimeException("Failed to deserialize transaction", e);
+        }
+    }
+
 
     private String retrievePrivateKey(String privateKeyFilePath) throws IOException {
         return FileUtil.readFromFile(privateKeyFilePath);
