@@ -26,4 +26,10 @@ public interface NodeClient {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     Uni<AdminActionResponse> adminActions(AdminActionRequest request);
+
+    @POST
+    @Path("/get_swap_transaction")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Uni<SwapTransactionResponse> getSwapTransaction(SwapTransactionRequest request);
 }

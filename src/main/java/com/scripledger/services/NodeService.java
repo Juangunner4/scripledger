@@ -4,6 +4,7 @@ import com.scripledger.collections.Transaction;
 import com.scripledger.collections.UserAccount;
 import com.scripledger.config.NodeClient;
 import com.scripledger.models.*;
+import com.scripledger.repositories.TokenSwapRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -35,7 +36,10 @@ public class NodeService {
     @Inject
     BrandsService brandsService;
 
-    private static final Logger LOGGER = Logger.getLogger(UserAccountService.class);
+    @Inject
+    TokenSwapRepository tokenSwapRepository;
+
+    private static final Logger LOGGER = Logger.getLogger(NodeService.class);
 
     public Uni<MintTokenResponse> mintBusinessTokens(MintTokenRequest request) {
         LOGGER.info("Issuing business currency with Initial Supply: " + request.getInitialSupply() + " and Decimals: " + request.getDecimals());
@@ -83,18 +87,6 @@ public class NodeService {
             return Uni.createFrom().failure(e);
         }
     }
-
-    @NotNull
-    private static Transaction setTransaction(UserAccount userAccount, MintTokenResponse mintTokenResponse) {
-        Transaction transaction = new Transaction();
-        transaction.setSenderPubKey(userAccount.getAccountPublicKey());
-        transaction.setMintPubKey(mintTokenResponse.getMintPubKey());
-        transaction.setTransactionHash(mintTokenResponse.getInitialSupplyTxnHash());
-        transaction.setTransactionType("issueBusinessCurrency");
-        transaction.setTimestamp(Date.from(Instant.now()));
-        return transaction;
-    }
-
 
     public Uni<TransactionResponse> transferFromBusiness(TransferRequest request) {
         LOGGER.info("Processing transaction from business account to recipient: " + request.getRecipientPubKey());
@@ -173,9 +165,37 @@ public class NodeService {
     }
 
 
+    public Uni<SwapTransactionResponse> getSwapTransaction(SwapTransactionRequest request) {
+        return tokenSwapRepository.findByMintKeys(request.getSourceMintPubKey(), request.getDestinationMintPubKey())
+                .onItem().transformToUni(tokenSwap -> {
+                    if (tokenSwap != null) {
+                        request.setTokenSwapProgramPubKey(tokenSwap.getTokenSwapProgramPubKey());
+                        return nodeClient.getSwapTransaction(request)
+                                .onItem().invoke(response -> LOGGER.info("Swap transaction received successfully"))
+                                .onFailure().invoke(th -> LOGGER.error("Failed to get swap transaction: " + th.getMessage()));
+                    } else {
+                        LOGGER.error("Token swap program not found for provided mint keys");
+                        return Uni.createFrom().failure(new RuntimeException("Token swap program not found"));
+                    }
+                });
+    }
+
+
     private String extractPublicKeyFromPrivateKey(String base58PrivateKey) {
         byte[] secretKeyBytes = Base58.decode(base58PrivateKey);
         Account account = new Account(secretKeyBytes);
         return account.getPublicKey().toBase58();
     }
+
+    @NotNull
+    private static Transaction setTransaction(UserAccount userAccount, MintTokenResponse mintTokenResponse) {
+        Transaction transaction = new Transaction();
+        transaction.setSenderPubKey(userAccount.getAccountPublicKey());
+        transaction.setMintPubKey(mintTokenResponse.getMintPubKey());
+        transaction.setTransactionHash(mintTokenResponse.getInitialSupplyTxnHash());
+        transaction.setTransactionType("issueBusinessCurrency");
+        transaction.setTimestamp(Date.from(Instant.now()));
+        return transaction;
+    }
+
 }
